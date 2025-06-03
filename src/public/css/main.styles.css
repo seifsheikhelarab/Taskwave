@@ -1,0 +1,26 @@
+.hero-section {
+    background: linear-gradient(135deg, #6e8efb, #a777e3);
+    color: white;
+    padding: 5rem 0;
+}
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #6e8efb;
+}
+.cta-section {
+    background-color: #f8f9fa;
+    padding: 4rem 0;
+}
+.nav-link.active {
+    font-weight: bold;
+    color: #6e8efb !important;
+}
+.screenshot-placeholder {
+    background-color: #e9ecef;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}

@@ -1,31 +1,25 @@
-import express,{ Request, Response } from "express";
+import express from "express";
+import { 
+    boardsGetController, 
+    newBoardGetController, 
+    newBoardPostController, 
+    oneBoardDeleteController, 
+    oneBoardGetController, 
+    oneBoardPutController 
+} from "../controllers/board.controller.js";
 
 const router = express.Router();
 
 router.route("/")
-    .get((req:Request,res:Response) => {
-        res.send("view all boards");
-    })
+    .get(boardsGetController)
 
 router.route("/new")
-    .get((req:Request,res:Response) => {
-        res.send("create new board");
-    })
-    .post((req:Request,res:Response)=>{
-        res.send("new board created");
-    })
+    .get(newBoardGetController)
+    .post(newBoardPostController)
 
-router.route("/:boardId")
-    .get((req:Request,res:Response) => {
-        res.send("view all boards");
-    })
-    .put((req:Request,res:Response)=>{
-        res.send("update the board");
-    })
-    .delete((req:Request,res:Response)=>{
-        res.send("delete the board");
-    })
-
-
+router.route("/boardId")
+    .get(oneBoardGetController)
+    .put(oneBoardPutController)
+    .delete(oneBoardDeleteController)
 
 export default router;

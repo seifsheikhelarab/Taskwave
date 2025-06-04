@@ -1,0 +1,245 @@
+<%- include('../partials/header', {title: 'Create New Project | TaskWave'}); %>
+
+<main class="bg-light py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <h2 class="h5 mb-0 fw-bold">
+                <i class="fas fa-plus-circle text-primary me-2"></i>Create New Project
+              </h2>
+              <a href="/projects" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-times me-1"></i> Cancel
+              </a>
+            </div>
+          </div>
+          
+          <div class="card-body pt-1 pb-4">
+            <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+              <div class="alert alert-danger">
+                <ul class="mb-0">
+                  <% errors.forEach(error => { %>
+                    <li><%= error.msg %></li>
+                  <% }); %>
+                </ul>
+              </div>
+            <% } %>
+
+            <form action="/projects" method="POST">
+              <div class="row g-3">
+                <!-- Project Name -->
+                <div class="col-md-12">
+                  <div class="form-floating">
+                    <input 
+                      type="text" 
+                      class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'name') ? 'is-invalid' : '' %>" 
+                      id="name" 
+                      name="name" 
+                      placeholder="Project Name" 
+                      value="<%= typeof oldInput !== 'undefined' ? oldInput.name : '' %>"
+                      required
+                    >
+                    <label for="name">Project Name</label>
+                    <% if (typeof errors !== 'undefined') { %>
+                      <% const nameError = errors.find(e => e.param === 'name'); %>
+                      <% if (nameError) { %>
+                        <div class="invalid-feedback">
+                          <%= nameError.msg %>
+                        </div>
+                      <% } %>
+                    <% } %>
+                  </div>
+                </div>
+
+                <!-- Project Description -->
+                <div class="col-md-12">
+                  <div class="form-floating">
+                    <textarea 
+                      class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'description') ? 'is-invalid' : '' %>" 
+                      id="description" 
+                      name="description" 
+                      placeholder="Project Description" 
+                      style="height: 120px;"
+                    ><%= typeof oldInput !== 'undefined' ? oldInput.description : '' %></textarea>
+                    <label for="description">Description (Optional)</label>
+                    <% if (typeof errors !== 'undefined') { %>
+                      <% const descError = errors.find(e => e.param === 'description'); %>
+                      <% if (descError) { %>
+                        <div class="invalid-feedback">
+                          <%= descError.msg %>
+                        </div>
+                      <% } %>
+                    <% } %>
+                  </div>
+                </div>
+
+                <!-- Start Date & Due Date -->
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input 
+                      type="date" 
+                      class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'startDate') ? 'is-invalid' : '' %>" 
+                      id="startDate" 
+                      name="startDate" 
+                      value="<%= typeof oldInput !== 'undefined' ? oldInput.startDate : '' %>"
+                    >
+                    <label for="startDate">Start Date</label>
+                    <% if (typeof errors !== 'undefined') { %>
+                      <% const startDateError = errors.find(e => e.param === 'startDate'); %>
+                      <% if (startDateError) { %>
+                        <div class="invalid-feedback">
+                          <%= startDateError.msg %>
+                        </div>
+                      <% } %>
+                    <% } %>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input 
+                      type="date" 
+                      class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'dueDate') ? 'is-invalid' : '' %>" 
+                      id="dueDate" 
+                      name="dueDate" 
+                      value="<%= typeof oldInput !== 'undefined' ? oldInput.dueDate : '' %>"
+                    >
+                    <label for="dueDate">Due Date</label>
+                    <% if (typeof errors !== 'undefined') { %>
+                      <% const dueDateError = errors.find(e => e.param === 'dueDate'); %>
+                      <% if (dueDateError) { %>
+                        <div class="invalid-feedback">
+                          <%= dueDateError.msg %>
+                        </div>
+                      <% } %>
+                    <% } %>
+                  </div>
+                </div>
+
+                <!-- Project Visibility -->
+                <div class="col-md-6">
+                  <label class="form-label">Project Visibility</label>
+                  <div class="form-check">
+                    <input 
+                      class="form-check-input" 
+                      type="radio" 
+                      name="visibility" 
+                      id="visibilityPublic" 
+                      value="public"
+                      <%= typeof oldInput !== 'undefined' && oldInput.visibility === 'public' ? 'checked' : '' %>
+                      <%= typeof oldInput === 'undefined' ? 'checked' : '' %>
+                    >
+                    <label class="form-check-label" for="visibilityPublic">
+                      <i class="fas fa-globe me-1"></i> Public (Visible to all team members)
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input 
+                      class="form-check-input" 
+                      type="radio" 
+                      name="visibility" 
+                      id="visibilityPrivate" 
+                      value="private"
+                      <%= typeof oldInput !== 'undefined' && oldInput.visibility === 'private' ? 'checked' : '' %>
+                    >
+                    <label class="form-check-label" for="visibilityPrivate">
+                      <i class="fas fa-lock me-1"></i> Private (Only visible to selected members)
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Project Template -->
+                <div class="col-md-6">
+                  <label class="form-label">Project Template (Optional)</label>
+                  <select 
+                    class="form-select <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'template') ? 'is-invalid' : '' %>" 
+                    id="template" 
+                    name="template"
+                  >
+                    <option value="">No template</option>
+                    <option value="kanban" <%= typeof oldInput !== 'undefined' && oldInput.template === 'kanban' ? 'selected' : '' %>>Kanban Board</option>
+                    <option value="scrum" <%= typeof oldInput !== 'undefined' && oldInput.template === 'scrum' ? 'selected' : '' %>>Scrum Board</option>
+                    <option value="basic" <%= typeof oldInput !== 'undefined' && oldInput.template === 'basic' ? 'selected' : '' %>>Basic Task List</option>
+                  </select>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const templateError = errors.find(e => e.param === 'template'); %>
+                    <% if (templateError) { %>
+                      <div class="invalid-feedback">
+                        <%= templateError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+
+                <!-- Team Members (for private projects) -->
+                <div class="col-md-12" id="teamMembersSection" style="<%= typeof oldInput !== 'undefined' && oldInput.visibility === 'private' ? '' : 'display: none;' %>">
+                  <label class="form-label">Select Team Members</label>
+                  <div class="card border">
+                    <div class="card-body py-2" style="max-height: 200px; overflow-y: auto;">
+                      <!-- Dummy team members - replace with real data from your backend -->
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="members" id="member1" value="user1" <%= typeof oldInput !== 'undefined' && oldInput.members && oldInput.members.includes('user1') ? 'checked' : '' %>>
+                        <label class="form-check-label d-flex align-items-center" for="member1">
+                          <img src="https://randomuser.me/api/portraits/women/44.jpg" class="rounded-circle me-2" width="24" height="24">
+                          Sarah Johnson (Product Manager)
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="members" id="member2" value="user2" <%= typeof oldInput !== 'undefined' && oldInput.members && oldInput.members.includes('user2') ? 'checked' : '' %>>
+                        <label class="form-check-label d-flex align-items-center" for="member2">
+                          <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-2" width="24" height="24">
+                          Michael Chen (Developer)
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="members" id="member3" value="user3" <%= typeof oldInput !== 'undefined' && oldInput.members && oldInput.members.includes('user3') ? 'checked' : '' %>>
+                        <label class="form-check-label d-flex align-items-center" for="member3">
+                          <img src="https://randomuser.me/api/portraits/women/68.jpg" class="rounded-circle me-2" width="24" height="24">
+                          Emma Davis (Designer)
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="members" id="member4" value="user4" <%= typeof oldInput !== 'undefined' && oldInput.members && oldInput.members.includes('user4') ? 'checked' : '' %>>
+                        <label class="form-check-label d-flex align-items-center" for="member4">
+                          <img src="https://randomuser.me/api/portraits/men/75.jpg" class="rounded-circle me-2" width="24" height="24">
+                          David Wilson (QA Tester)
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="col-md-12 mt-3">
+                  <button type="submit" class="btn btn-primary w-100 py-3">
+                    <i class="fas fa-plus-circle me-2"></i> Create Project
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer'); %>
+
+<script>
+  // Show/hide team members section based on visibility selection
+  document.addEventListener('DOMContentLoaded', function() {
+    const publicRadio = document.getElementById('visibilityPublic');
+    const privateRadio = document.getElementById('visibilityPrivate');
+    const teamMembersSection = document.getElementById('teamMembersSection');
+
+    function toggleTeamMembers() {
+      teamMembersSection.style.display = privateRadio.checked ? 'block' : 'none';
+    }
+
+    publicRadio.addEventListener('change', toggleTeamMembers);
+    privateRadio.addEventListener('change', toggleTeamMembers);
+  });
+</script>

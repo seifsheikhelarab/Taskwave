@@ -1,46 +1,45 @@
-import express,{ Request, Response } from "express";
+import express from "express";
+import { 
+    googleGetController, 
+    loginGetController, 
+    loginPostController, 
+    logoutGetController, 
+    resetConfirmGetController, 
+    resetConfirmPostController, 
+    resetGetController, 
+    resetPostController, 
+    signupGetController, 
+    signupPostController 
+} from "../controllers/authentication.controller.js";
 import passport from "passport";
 
 const router = express.Router();
 
 router.route("/signup")
-    .get((req:Request, res:Response)=>{
-        res.render("authentication/signup");
-    })
-    .post((req:Request, res:Response)=>{
-        res.send("hi");
-    });
+    .get(signupGetController)
+    .post(signupPostController);
 
 router.route("/login")
-    .get((req:Request, res:Response)=>{
-        res.render("authentication/login");
-    })
-    .post((req:Request, res:Response)=>{
-        res.send("hi");
-    });
+    .get(loginGetController)
+    .post(loginPostController);
 
 router.route("/logout")
-    .get((req:Request, res:Response)=>{
-        res.send("hi");
-    })
+    .get(logoutGetController)
 
 //forget password routes
-router.route("/logout")
-    .get((req:Request, res:Response)=>{
-        res.send("hi");
-    })
+router.route("/reset")
+    .get(resetGetController)
+    .post(resetPostController)
 
-router.route("/logout/:token")
-    .get((req:Request, res:Response)=>{
-        res.send("hi");
-    })
+router.route("/reset/token")
+    .get(resetConfirmGetController)
+    .get(resetConfirmPostController)
 
 
 // //google routes
 // //need fixing
-// router.get("/auth/callback", passport.authenticate("google",{failureRedirect:"/"}),(req, res) => {
-//     res.redirect("/profile/google");
-// })
+router.route("/auth/callback")
+    .get(passport.authenticate("google",{failureRedirect:"/"}),googleGetController);
 
 // router.get("/auth/google", passport.authenticate("google",{scope:['profile','email']}));
 

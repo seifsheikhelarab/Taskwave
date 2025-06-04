@@ -1,0 +1,273 @@
+<%- include('../partials/header', {title: 'My Projects | TaskWave'}); %>
+
+<main class="py-4">
+  <div class="container">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h2 fw-bold mb-0">My Projects</h1>
+        <p class="text-muted mb-0">Manage your team projects and tasks</p>
+      </div>
+      <a href="/projects/new" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i> New Project
+      </a>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="row g-4">
+      <!-- Project Card 1 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-header bg-primary bg-opacity-10 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="badge bg-primary">Active</span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-pencil-alt me-2"></i>Edit</a></li>
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-users me-2"></i>Manage Team</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Website Redesign</h5>
+            <p class="card-text text-muted">Complete redesign of company website with new branding</p>
+            
+            <div class="d-flex align-items-center mb-3">
+              <div class="progress flex-grow-1" style="height: 6px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 65%;"></div>
+              </div>
+              <small class="text-muted ms-2">65%</small>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar-group">
+                <img src="https://randomuser.me/api/portraits/women/44.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Sarah Johnson">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Michael Chen">
+                <img src="https://randomuser.me/api/portraits/women/68.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Emma Davis">
+                <span class="avatar avatar-xs rounded-circle bg-light text-dark border">+2</span>
+              </div>
+              <span class="badge bg-light text-dark"><i class="far fa-clock me-1"></i> Due in 2 weeks</span>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-0">
+            <a href="/projects/1" class="btn btn-outline-primary w-100">Open Project</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Card 2 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-header bg-warning bg-opacity-10 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="badge bg-warning text-dark">On Hold</span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-pencil-alt me-2"></i>Edit</a></li>
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-users me-2"></i>Manage Team</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Mobile App Development</h5>
+            <p class="card-text text-muted">New cross-platform mobile application for iOS and Android</p>
+            
+            <div class="d-flex align-items-center mb-3">
+              <div class="progress flex-grow-1" style="height: 6px;">
+                <div class="progress-bar bg-warning" role="progressbar" style="width: 30%;"></div>
+              </div>
+              <small class="text-muted ms-2">30%</small>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar-group">
+                <img src="https://randomuser.me/api/portraits/men/75.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="David Wilson">
+                <img src="https://randomuser.me/api/portraits/women/63.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Olivia Martinez">
+                <span class="avatar avatar-xs rounded-circle bg-light text-dark border">+1</span>
+              </div>
+              <span class="badge bg-light text-dark"><i class="far fa-clock me-1"></i> Due in 1 month</span>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-0">
+            <a href="/projects/2" class="btn btn-outline-primary w-100">Open Project</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Card 3 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-header bg-success bg-opacity-10 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="badge bg-success">Completed</span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-pencil-alt me-2"></i>Edit</a></li>
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-users me-2"></i>Manage Team</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Marketing Campaign</h5>
+            <p class="card-text text-muted">Q3 product launch marketing materials and strategy</p>
+            
+            <div class="d-flex align-items-center mb-3">
+              <div class="progress flex-grow-1" style="height: 6px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 100%;"></div>
+              </div>
+              <small class="text-muted ms-2">100%</small>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar-group">
+                <img src="https://randomuser.me/api/portraits/women/28.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Jessica Lee">
+                <img src="https://randomuser.me/api/portraits/men/22.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Robert Garcia">
+                <img src="https://randomuser.me/api/portraits/women/90.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Sophia Kim">
+                <span class="avatar avatar-xs rounded-circle bg-light text-dark border">+3</span>
+              </div>
+              <span class="badge bg-light text-dark"><i class="fas fa-check-circle me-1"></i> Completed</span>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-0">
+            <a href="/projects/3" class="btn btn-outline-primary w-100">View Project</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Card 4 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-header bg-primary bg-opacity-10 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="badge bg-primary">Active</span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-pencil-alt me-2"></i>Edit</a></li>
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-users me-2"></i>Manage Team</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Product Database Migration</h5>
+            <p class="card-text text-muted">Migrate legacy product data to new cloud database</p>
+            
+            <div class="d-flex align-items-center mb-3">
+              <div class="progress flex-grow-1" style="height: 6px;">
+                <div class="progress-bar bg-info" role="progressbar" style="width: 45%;"></div>
+              </div>
+              <small class="text-muted ms-2">45%</small>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar-group">
+                <img src="https://randomuser.me/api/portraits/men/41.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="James Smith">
+                <img src="https://randomuser.me/api/portraits/women/33.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Emily Wilson">
+                <span class="avatar avatar-xs rounded-circle bg-light text-dark border">+4</span>
+              </div>
+              <span class="badge bg-light text-dark"><i class="far fa-clock me-1"></i> Due in 3 weeks</span>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-0">
+            <a href="/projects/4" class="btn btn-outline-primary w-100">Open Project</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Card 5 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-header bg-danger bg-opacity-10 border-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="badge bg-danger">Overdue</span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-pencil-alt me-2"></i>Edit</a></li>
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-users me-2"></i>Manage Team</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Annual Report Preparation</h5>
+            <p class="card-text text-muted">Compile and design company annual financial report</p>
+            
+            <div class="d-flex align-items-center mb-3">
+              <div class="progress flex-grow-1" style="height: 6px;">
+                <div class="progress-bar bg-danger" role="progressbar" style="width: 70%;"></div>
+              </div>
+              <small class="text-muted ms-2">70%</small>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="avatar-group">
+                <img src="https://randomuser.me/api/portraits/women/56.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Amanda Brown">
+                <img src="https://randomuser.me/api/portraits/men/67.jpg" class="avatar avatar-xs rounded-circle" alt="Team member" data-bs-toggle="tooltip" data-bs-placement="top" title="Daniel Miller">
+                <span class="avatar avatar-xs rounded-circle bg-light text-dark border">+2</span>
+              </div>
+              <span class="badge bg-light text-dark"><i class="fas fa-exclamation-triangle me-1"></i> Overdue</span>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-0">
+            <a href="/projects/5" class="btn btn-outline-primary w-100">Open Project</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State Card -->
+      <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-2 border-dashed">
+          <div class="card-body d-flex flex-column justify-content-center align-items-center text-center p-5">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle mb-3">
+              <i class="fas fa-plus text-primary" style="font-size: 1.5rem;"></i>
+            </div>
+            <h5 class="mb-2">Create New Project</h5>
+            <p class="text-muted mb-0">Start organizing your team's work</p>
+            <a href="/projects/new" class="btn btn-primary mt-3 px-4">Create Project</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+
+
+<%- include('../partials/footer.ejs') %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+</script>

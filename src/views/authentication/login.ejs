@@ -1,0 +1,120 @@
+<%- include('../partials/header.ejs', {title: 'Login | TaskWave'}); %>
+
+<main class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4 p-sm-5">
+            <div class="text-center mb-4">
+              <h2 class="fw-bold">Welcome Back</h2>
+              <p class="text-muted">Log in to access your projects and tasks</p>
+            </div>
+
+            <% if (typeof error !== 'undefined') { %>
+              <div class="alert alert-danger">
+                <%= error %>
+              </div>
+            <% } %>
+
+            <% if (typeof success !== 'undefined') { %>
+              <div class="alert alert-success">
+                <%= success %>
+              </div>
+            <% } %>
+
+            <form action="/login" method="POST">
+              <div class="mb-3">
+                <div class="form-floating">
+                  <input 
+                    type="email" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'email') ? 'is-invalid' : '' %>" 
+                    id="email" 
+                    name="email" 
+                    placeholder="name@example.com" 
+                    value="<%= typeof oldInput !== 'undefined' ? oldInput.email : '' %>"
+                    required
+                  >
+                  <label for="email">Email Address</label>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const emailError = errors.find(e => e.param === 'email'); %>
+                    <% if (emailError) { %>
+                      <div class="invalid-feedback">
+                        <%= emailError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="form-floating">
+                  <input 
+                    type="password" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'password') ? 'is-invalid' : '' %>" 
+                    id="password" 
+                    name="password" 
+                    placeholder="Password" 
+                    required
+                  >
+                  <label for="password">Password</label>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const passwordError = errors.find(e => e.param === 'password'); %>
+                    <% if (passwordError) { %>
+                      <div class="invalid-feedback">
+                        <%= passwordError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                  <input 
+                    class="form-check-input" 
+                    type="checkbox" 
+                    id="remember" 
+                    name="remember"
+                    <%= typeof oldInput !== 'undefined' && oldInput.remember === 'on' ? 'checked' : '' %>
+                  >
+                  <label class="form-check-label" for="remember">
+                    Remember me
+                  </label>
+                </div>
+                <a href="/forgot-password" class="text-decoration-none">Forgot password?</a>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100 py-3 mb-3">Log In</button>
+
+              <div class="text-center mt-3">
+                <p class="mb-0">Don't have an account? <a href="/register" class="text-decoration-none">Sign up</a></p>
+              </div>
+
+              <div class="d-flex align-items-center my-4">
+                <hr class="flex-grow-1">
+                <span class="mx-3 text-muted">OR</span>
+                <hr class="flex-grow-1">
+              </div>
+
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <a href="/auth/google" class="btn btn-outline-danger w-100">
+                    <i class="fab fa-google me-2"></i> Continue with Google
+                  </a>
+                </div>
+                <div class="col-md-6">
+                  <a href="/auth/twitter" class="btn btn-outline-dark w-100">
+                    <i class="fab fa-twitter me-2"></i> Continue with Twitter
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer.ejs'); %>

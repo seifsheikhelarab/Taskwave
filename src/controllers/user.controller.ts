@@ -9,7 +9,7 @@ export async function currentUserGetController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.redirect('/login');
+            res.redirect('/auth/login');
         }
 
         const user = await User.findById(userId)
@@ -17,7 +17,7 @@ export async function currentUserGetController(req: Request, res: Response) {
             .lean();
 
         if (!user) {
-            return res.status(404).render("error", {
+            res.status(404).render("error", {
                 message: "User not found"
             });
         }
@@ -63,41 +63,41 @@ export async function currentUserPutController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
         }
 
         const { firstName, lastName, email, currentPassword, newPassword, avatar } = req.body;
 
         const user = await User.findById(userId).select('+password');
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            res.status(404).json({ message: "User not found" });
         }
 
         // Update basic info
-        if (firstName) user.firstName = firstName;
-        if (lastName) user.lastName = lastName;
-        if (email) user.email = email;
-        if (avatar) user.avatar = avatar;
+        if (firstName) user!.firstName = firstName;
+        if (lastName) user!.lastName = lastName;
+        if (email) user!.email = email;
+        if (avatar) user!.avatar = avatar;
 
         // Update password if provided
         if (typeof currentPassword === 'string' && typeof newPassword === 'string') {
-            const isMatch = await user.correctPassword(currentPassword);
+            const isMatch = await user!.correctPassword(currentPassword);
             if (!isMatch) {
-                return res.status(400).json({ message: "Current password is incorrect" });
+                res.status(400).json({ message: "Current password is incorrect" });
             }
 
-            user.password = newPassword; // The pre-save hook will hash it
+            user!.password = newPassword; // The pre-save hook will hash it
         }
 
-        await user.save();
+        await user!.save();
 
         res.json({ 
             message: 'Profile updated successfully',
             user: {
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                avatar: user.avatar
+                firstName: user!.firstName,
+                lastName: user!.lastName,
+                email: user!.email,
+                avatar: user!.avatar
             }
         });
     } catch (error) {
@@ -111,23 +111,23 @@ export async function currentUserDeleteController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
         }
 
         const { password } = req.body;
         if (typeof password !== 'string') {
-            return res.status(400).json({ message: "Password is required to delete account" });
+            res.status(400).json({ message: "Password is required to delete account" });
         }
 
         const user = await User.findById(userId).select('+password');
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            res.status(404).json({ message: "User not found" });
         }
 
         // Verify password
-        const isMatch = await user.correctPassword(password);
+        const isMatch = await user!.correctPassword(password);
         if (!isMatch) {
-            return res.status(400).json({ message: "Password is incorrect" });
+            res.status(400).json({ message: "Password is incorrect" });
         }
 
         // Delete user's projects where they are the owner
@@ -149,7 +149,7 @@ export async function currentUserDeleteController(req: Request, res: Response) {
         );
 
         // Delete the user
-        await user.deleteOne();
+        await user!.deleteOne();
 
         // Clear session
         req.session.destroy((err) => {
@@ -168,9 +168,9 @@ export async function currentUserDeleteController(req: Request, res: Response) {
 // Get public user profile
 export async function publicUserGetController(req: Request, res: Response) {
     try {
-        const userId = req.params.userId;
+        const userId = req.params.id;
         if (!userId) {
-            return res.status(400).render("error", {
+            res.status(400).render("error", {
                 message: "User ID is required"
             });
         }
@@ -180,7 +180,7 @@ export async function publicUserGetController(req: Request, res: Response) {
             .lean();
 
         if (!user) {
-            return res.status(404).render("error", {
+            res.status(404).render("error", {
                 message: "User not found"
             });
         }

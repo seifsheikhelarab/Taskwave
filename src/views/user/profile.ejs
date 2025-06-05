@@ -1,0 +1,138 @@
+<%- include('../partials/header', {title: 'My Profile | TaskWave'}); %>
+
+<main class="py-4">
+  <div class="container">
+    <div class="row g-4">
+      <!-- Profile Sidebar -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center">
+            <div class="mb-4">
+              <% if (user.avatar) { %>
+                <img src="<%= user.avatar %>" alt="<%= user.firstName %>" class="rounded-circle mb-3" width="120" height="120">
+              <% } else { %>
+                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px;">
+                  <i class="fas fa-user fa-3x text-primary"></i>
+                </div>
+              <% } %>
+              <h4 class="mb-1"><%= user.firstName %> <%= user.lastName %></h4>
+              <p class="text-muted mb-0"><%= user.email %></p>
+            </div>
+            <div class="d-grid gap-2">
+              <a href="/settings" class="btn btn-outline-primary">
+                <i class="fas fa-cog me-2"></i>Edit Profile
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card border-0 shadow-sm mt-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Quick Stats</h5>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Projects</span>
+              <span class="fw-bold"><%= projects?.length || 0 %></span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Tasks</span>
+              <span class="fw-bold"><%= tasks?.length || 0 %></span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Completed Tasks</span>
+              <span class="fw-bold"><%= tasks?.filter(t => t.isComplete).length || 0 %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-lg-8">
+        <!-- Recent Projects -->
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header bg-white border-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Recent Projects</h5>
+              <a href="/projects" class="btn btn-sm btn-link">View All</a>
+            </div>
+          </div>
+          <div class="card-body">
+            <% if (projects && projects.length > 0) { %>
+              <div class="list-group list-group-flush">
+                <% projects.forEach(project => { %>
+                  <a href="/projects/<%= project._id %>" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-1"><%= project.name %></h6>
+                        <p class="text-muted mb-0 small"><%= project.description?.substring(0, 100) %><%= project.description?.length > 100 ? '...' : '' %></p>
+                      </div>
+                      <span class="badge bg-<%= project.status === 'active' ? 'success' : project.status === 'on-hold' ? 'warning' : 'secondary' %>">
+                        <%= project.status.charAt(0).toUpperCase() + project.status.slice(1) %>
+                      </span>
+                    </div>
+                  </a>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div class="text-center py-4">
+                <div class="text-muted">
+                  <i class="fas fa-project-diagram fa-2x mb-3"></i>
+                  <p class="mb-0">No projects yet</p>
+                  <a href="/projects/new" class="btn btn-sm btn-primary mt-2">Create Project</a>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Recent Tasks -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Recent Tasks</h5>
+              <a href="/tasks" class="btn btn-sm btn-link">View All</a>
+            </div>
+          </div>
+          <div class="card-body">
+            <% if (tasks && tasks.length > 0) { %>
+              <div class="list-group list-group-flush">
+                <% tasks.forEach(task => { %>
+                  <a href="/tasks/<%= task._id %>" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-1"><%= task.title %></h6>
+                        <p class="text-muted mb-0 small">
+                          <%= task.description?.substring(0, 100) %><%= task.description?.length > 100 ? '...' : '' %>
+                        </p>
+                      </div>
+                      <div class="text-end">
+                        <span class="badge bg-<%= task.status === 'todo' ? 'secondary' : task.status === 'inProgress' ? 'warning' : 'success' %> mb-1">
+                          <%= task.status.charAt(0).toUpperCase() + task.status.slice(1) %>
+                        </span>
+                        <% if (task.dueDate) { %>
+                          <div class="small <%= new Date(task.dueDate) < new Date() && !task.isComplete ? 'text-danger' : 'text-muted' %>">
+                            Due: <%= new Date(task.dueDate).toLocaleDateString() %>
+                          </div>
+                        <% } %>
+                      </div>
+                    </div>
+                  </a>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div class="text-center py-4">
+                <div class="text-muted">
+                  <i class="fas fa-tasks fa-2x mb-3"></i>
+                  <p class="mb-0">No tasks yet</p>
+                  <a href="/tasks/new" class="btn btn-sm btn-primary mt-2">Create Task</a>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer'); %>

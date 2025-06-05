@@ -86,24 +86,36 @@ export async function newProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.redirect('/login');
+            return res.redirect('/auth/login');
         }
 
-        const { name, description, visibility, template } = req.body;
+        const { name, description, visibility, startDate, dueDate } = req.body;
+
+        // Validate required fields
+        if (!name) {
+            return res.render("project/new", {
+                errors: [{ msg: 'Project name is required' }],
+                oldInput: req.body
+            });
+        }
 
         // Create new project
         const project = await Project.create({
             name,
             description,
-            visibility,
+            visibility: visibility || 'public',
+            status: 'active',
+            startDate: startDate || undefined,
+            dueDate: dueDate || undefined,
             createdBy: userId,
             members: [{
                 user: userId,
-                role: 'owner'
+                role: 'owner',
+                joinedAt: new Date()
             }],
             settings: {
                 taskPrefix: 'TASK',
-                defaultTaskStatus: template === 'kanban' ? 'todo' : 'todo'
+                defaultTaskStatus: 'todo'
             }
         });
 
@@ -118,89 +130,77 @@ export async function newProjectPostController(req: Request, res: Response) {
 }
 
 // Get a single project
-export async function oneProjectGetController(req: Request, res: Response) {
+export async function oneProjectGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.redirect('/login');
+            res.redirect('/auth/login');
+            return;
         }
 
-        const projectId = new Types.ObjectId(req.params.projectId);
+        let projectId;
+        try {
+            projectId = new Types.ObjectId(req.params.projectId);
+        } catch (error) {
+            res.status(404).render('error', { 
+                message: 'Project not found',
+                error: { status: 404 }
+            });
+            return;
+        }
+
         const project = await Project.findOne({
             _id: projectId,
             $or: [
                 { createdBy: userId },
                 { 'members.user': userId }
             ]
-        }).populate<{ members: (IProjectMember & { user: IUser })[] }>('members.user', 'firstName lastName email avatar');
+        }).populate('members.user', 'firstName lastName email avatar');
 
         if (!project) {
-            res.status(404).render("error", {
-                message: "Project not found or you don't have access to it"
+            res.status(404).render('error', { 
+                message: 'Project not found or you do not have access to it',
+                error: { status: 404 }
             });
+            return;
         }
 
-        // Get tasks for each status
+        // Get project tasks
         const tasks = await Task.find({ project: projectId })
             .populate('assignees', 'firstName lastName email avatar')
-            .populate('createdBy', 'firstName lastName email avatar');
-
-        const columns = {
-            todo: { tasks: tasks.filter(t => t.status === 'todo') },
-            inProgress: { tasks: tasks.filter(t => t.status === 'inProgress') },
-            done: { tasks: tasks.filter(t => t.status === 'done') }
-        };
+            .populate('createdBy', 'firstName lastName email avatar')
+            .sort({ createdAt: -1 });
 
         // Calculate project statistics
         const taskCount = tasks.length;
         const completedTasks = tasks.filter(t => t.isComplete).length;
         const dueSoonTasks = tasks.filter(t => {
-            if (!t.dueDate || t.isComplete) {
-                return false;
-            }
+            if (!t.dueDate || t.isComplete) return false;
             const dueDate = t.dueDate instanceof Date ? t.dueDate : new Date(t.dueDate);
             const now = new Date();
             const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
             return diffDays <= 7 && diffDays > 0;
         }).length;
-        const overdueTasks = tasks.filter(t => {
-            if (!t.dueDate || t.isComplete) {
-                return false;
-            }
-            const dueDate = t.dueDate instanceof Date ? t.dueDate : new Date(t.dueDate);
-            return dueDate < new Date();
-        }).length;
 
-        if (!project) {
-            res.status(404).render("error", {
-                message: "Project not found or you don't have access to it"
-            });
-        }
+        // Add tasks and stats to project object
+        const projectWithTasks = {
+            ...project.toObject(),
+            tasks,
+            taskCount,
+            completedTasks,
+            dueSoonTasks
+        };
 
-        // Assert project is not null after the check
-        const nonNullProject = project as NonNullable<typeof project>;
-        const projectData = nonNullProject.toObject();
-        res.render("project/project", {
-            project: {
-                ...projectData,
-                taskCount,
-                completedTasks,
-                dueSoonTasks,
-                overdueTasks,
-                columns,
-                team: nonNullProject.members.map(m => ({
-                    id: m.user._id,
-                    name: `${(m.user as IUser).firstName} ${(m.user as IUser).lastName}`,
-                    role: m.role,
-                    avatar: (m.user as IUser).avatar,
-                    isOnline: false // TODO: Implement online status
-                }))
-            }
+        res.render('project/project', {
+            title: project.name,
+            project: projectWithTasks,
+            user: res.locals.user
         });
     } catch (error) {
         console.error('Error fetching project:', error);
-        res.status(500).render("error", {
-            message: "An error occurred while fetching the project"
+        res.status(500).render('error', { 
+            message: 'An error occurred while fetching the project',
+            error: { status: 500 }
         });
     }
 }
@@ -210,7 +210,7 @@ export async function editProjectGetController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.redirect('/login');
+            res.redirect('/auth/login');
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
@@ -283,7 +283,7 @@ export async function editProjectDeleteController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.status(401).json({ message: 'Unauthorized' });
+            return res.redirect('/auth/login');
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
@@ -293,7 +293,10 @@ export async function editProjectDeleteController(req: Request, res: Response) {
         });
 
         if (!isProjectNotNull(project)) {
-            res.status(404).json({ message: "Project not found or you don't have permission to delete it" });
+            return res.status(404).render('error', { 
+                message: "Project not found or you don't have permission to delete it",
+                error: { status: 404 }
+            });
         }
 
         // Delete all tasks associated with the project
@@ -302,10 +305,13 @@ export async function editProjectDeleteController(req: Request, res: Response) {
         // Delete the project
         await project!.deleteOne();
 
-        res.json({ message: 'Project deleted successfully' });
+        res.redirect('/projects');
     } catch (error) {
         console.error('Error deleting project:', error);
-        res.status(500).json({ message: 'An error occurred while deleting the project' });
+        res.status(500).render('error', { 
+            message: 'An error occurred while deleting the project',
+            error: { status: 500 }
+        });
     }
 }
 
@@ -314,7 +320,7 @@ export async function inviteProjectGetController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.redirect('/login');
+            res.redirect('/auth/login');
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);

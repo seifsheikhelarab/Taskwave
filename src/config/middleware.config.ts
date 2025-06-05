@@ -3,32 +3,37 @@
 
 import { Application } from "express";
 import express from "express";
-import { rateLimit } from "express-rate-limit";
-import MongoRateStore from "rate-limit-mongo";
 import path from "path";
 import { __dirname } from "../app.js";
 import morgan from "morgan";
+import { attachUserToViews } from "../middleware/user.middleware.js";
+import methodOverride from "method-override";
 
-
-export default function middlewareSetup(app: Application){
-
+export default function middlewareSetup(app: Application) {
+    // Logging
     app.use(morgan("dev"));
-    app.set("view engine","ejs");
-    app.use(express.static(path.join(__dirname, 'public')));
-    app.use(express.urlencoded({ extended: false }));
+
+    // View engine setup
+    app.set("view engine", "ejs");
     app.set('views', path.join(__dirname, 'views'));
+
+    // Static files
+    app.use(express.static(path.join(__dirname, 'public')));
+
+    // Body parsing
+    app.use(express.urlencoded({ extended: false }));
     app.use(express.json());
-    app.use(rateLimit({
-        windowMs: 15 * 60 * 1000,
-        limit: 50,
-        message: "rate limit reached, try again in 15 minutes",
-        store: new MongoRateStore(
-            {
-                uri: process.env.MONGO_URI,
-                collectionName: "rateRecords",
-                expireTimeMs: 15 * 60 * 1000,
-            }
-        ),
-    })
-    )
+    
+    // Method override for DELETE, PUT, etc.
+    app.use(methodOverride(function (req, res) {
+        if (req.body && typeof req.body === 'object' && '_method' in req.body) {
+            // look in urlencoded POST bodies and delete it
+            const method = req.body._method;
+            delete req.body._method;
+            return method;
+        }
+    }));
+    
+    // Attach user to all views
+    app.use(attachUserToViews);
 }

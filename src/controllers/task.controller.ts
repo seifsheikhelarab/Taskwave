@@ -4,55 +4,90 @@ import Project from "../models/project.model.js";
 import User from "../models/user.model.js";
 import { Types } from "mongoose";
 
-// Get all tasks for a project
-export async function tasksGetController(req: Request, res: Response) {
+// Get all tasks for a project or user
+export async function tasksGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.redirect('/login');
+            return res.redirect('/auth/login');
         }
 
-        const projectId = new Types.ObjectId(req.params.projectId);
-        
-        // Check if user has access to the project
-        const project = await Project.findOne({
-            _id: projectId,
-            $or: [
-                { createdBy: userId },
-                { 'members.user': userId }
-            ]
-        });
+        const projectId = req.params.projectId;
+        let tasks;
+        let project;
+        let viewData: any = {
+            title: 'My Tasks | TaskWave',
+            tasks: [],
+            project: null,
+            user: res.locals.user
+        };
 
-        if (!project) {
-            return res.status(404).render("error", {
-                message: "Project not found or you don't have access to it"
+        if (projectId) {
+            // Get tasks for a specific project
+            project = await Project.findOne({
+                _id: new Types.ObjectId(projectId),
+                $or: [
+                    { createdBy: userId },
+                    { 'members.user': userId }
+                ]
             });
+
+            if (!project) {
+                return res.status(404).render("error", {
+                    message: "Project not found or you don't have access to it"
+                });
+            }
+
+            tasks = await Task.find({ project: projectId })
+                .populate('assignees', 'firstName lastName email avatar')
+                .populate('createdBy', 'firstName lastName email avatar')
+                .sort({ createdAt: -1 })
+                .lean();
+
+            viewData.title = `${project.name} Tasks | TaskWave`;
+            viewData.project = project;
+        } else {
+            // Get all tasks assigned to the user
+            tasks = await Task.find({ assignees: userId })
+                .populate('project', 'name')
+                .populate('assignees', 'firstName lastName email avatar')
+                .populate('createdBy', 'firstName lastName email avatar')
+                .sort({ dueDate: 1 })
+                .lean();
         }
 
-        const tasks = await Task.find({ project: projectId })
-            .sort({ createdAt: -1 })
-            .lean();
+        // Calculate task statistics
+        const taskCount = tasks.length;
+        const completedTasks = tasks.filter(t => t.isComplete).length;
+        const dueSoonTasks = tasks.filter(t => {
+            if (!t.dueDate || t.isComplete) return false;
+            const dueDate = t.dueDate instanceof Date ? t.dueDate : new Date(t.dueDate);
+            const now = new Date();
+            const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            return diffDays <= 7 && diffDays > 0;
+        }).length;
 
-        res.render("task/tasks", {
-            tasks,
-            project,
-            errors: [],
-            oldInput: {}
-        });
+        viewData.tasks = tasks;
+        viewData.taskCount = taskCount;
+        viewData.completedTasks = completedTasks;
+        viewData.dueSoonTasks = dueSoonTasks;
+
+        return res.render("task/tasks", viewData);
     } catch (error) {
         console.error('Error fetching tasks:', error);
-        res.status(500).render("error", {
+        return res.status(500).render("error", {
             message: "An error occurred while fetching tasks"
         });
     }
 }
 
 // Show form to create a new task
-export async function newTaskGetController(req: Request, res: Response) {
+export async function newTaskGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.redirect('/login');
+            res.redirect('/login');
+            return;
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
@@ -67,9 +102,10 @@ export async function newTaskGetController(req: Request, res: Response) {
         }).populate('members.user', 'firstName lastName email avatar');
 
         if (!project) {
-            return res.status(404).render("error", {
+            res.status(404).render("error", {
                 message: "Project not found or you don't have access to it"
             });
+            return;
         }
 
         res.render("task/new", {
@@ -86,15 +122,16 @@ export async function newTaskGetController(req: Request, res: Response) {
 }
 
 // Create a new task
-export async function newTaskPostController(req: Request, res: Response) {
+export async function newTaskPostController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
-        const { title, description, status, priority, dueDate, assignees, labels } = req.body;
+        const { title, description, status, priority, dueDate, assignees } = req.body;
 
         // Check if user has access to the project
         const project = await Project.findOne({
@@ -106,8 +143,15 @@ export async function newTaskPostController(req: Request, res: Response) {
         });
 
         if (!project) {
-            return res.status(404).json({ message: "Project not found or you don't have access to it" });
+            res.status(404).json({ message: "Project not found or you don't have access to it" });
+            return;
         }
+
+        // Get the current task count for the project
+        const taskCount = await Task.countDocuments({ project: projectId });
+
+        // Handle assignees - convert to array if single value
+        const assigneeIds = assignees ? (Array.isArray(assignees) ? assignees : [assignees]).filter(Boolean) : [];
 
         // Create new task
         const task = await Task.create({
@@ -118,14 +162,13 @@ export async function newTaskPostController(req: Request, res: Response) {
             dueDate: dueDate ? new Date(dueDate) : undefined,
             project: projectId,
             createdBy: userId,
-            assignees: assignees ? assignees.map((id: string) => new Types.ObjectId(id)) : [],
-            labels: labels || []
+            assignees: assigneeIds.map(id => new Types.ObjectId(id)),
+            taskNumber: taskCount + 1,
+            taskId: `${project.settings.taskPrefix}-${taskCount + 1}`
         });
 
-        res.json({
-            message: 'Task created successfully',
-            task
-        });
+        // Redirect back to project page
+        res.redirect(`/projects/${projectId}`);
     } catch (error) {
         console.error('Error creating task:', error);
         res.status(500).json({ message: 'An error occurred while creating the task' });
@@ -133,11 +176,12 @@ export async function newTaskPostController(req: Request, res: Response) {
 }
 
 // Get a single task
-export async function oneTaskGetController(req: Request, res: Response) {
+export async function oneTaskGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.redirect('/login');
+            res.redirect('/login');
+            return;
         }
 
         const taskId = new Types.ObjectId(req.params.taskId);
@@ -145,9 +189,10 @@ export async function oneTaskGetController(req: Request, res: Response) {
         const task = await Task.findById(taskId).lean();
 
         if (!task) {
-            return res.status(404).render("error", {
+            res.status(404).render("error", {
                 message: "Task not found"
             });
+            return;
         }
 
         // Check if user has access to the project
@@ -160,9 +205,10 @@ export async function oneTaskGetController(req: Request, res: Response) {
         });
 
         if (!project) {
-            return res.status(404).render("error", {
+            res.status(404).render("error", {
                 message: "You don't have access to this task"
             });
+            return;
         }
 
         res.render("task/task", {
@@ -179,99 +225,103 @@ export async function oneTaskGetController(req: Request, res: Response) {
     }
 }
 
-// Update a task
-export async function oneTaskPutController(req: Request, res: Response) {
+// Update task status
+export async function updateTaskStatusController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
         }
 
-        const taskId = new Types.ObjectId(req.params.taskId);
-        const { title, description, status, priority, dueDate, assignees, labels, isComplete } = req.body;
+        const { taskId } = req.params;
+        const { isComplete } = req.body;
 
-        const task = await Task.findById(taskId);
+        const task = await Task.findOne({
+            _id: taskId,
+            assignees: userId
+        });
+
         if (!task) {
-            return res.status(404).json({ message: "Task not found" });
+            res.status(404).json({ message: 'Task not found or you are not assigned to it' });
         }
 
-        // Check if user has access to the project
-        const project = await Project.findOne({
-            _id: task.project,
+        task!.isComplete = isComplete;
+        task!.status = isComplete ? 'done' : 'todo';
+        task!.completedAt = isComplete ? new Date() : undefined;
+        await task!.save();
+
+        res.json({ message: 'Task status updated successfully' });
+    } catch (error) {
+        console.error('Error updating task status:', error);
+        res.status(500).json({ message: 'An error occurred while updating task status' });
+    }
+}
+
+// Update task
+export async function oneTaskPutController(req: Request, res: Response): Promise<void> {
+    try {
+        const userId = req.session.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        const { taskId } = req.params;
+        const { title, description, dueDate, priority, status, assignees } = req.body;
+
+        const task = await Task.findOne({
+            _id: taskId,
             $or: [
                 { createdBy: userId },
-                { 'members.user': userId, 'members.role': { $in: ['owner', 'admin'] } }
+                { assignees: userId }
             ]
         });
 
-        if (!project) {
-            return res.status(404).json({ message: "You don't have permission to update this task" });
+        if (!task) {
+            res.status(404).json({ message: 'Task not found or you do not have permission to edit it' });
         }
 
         // Update task fields
-        if (title) task.title = title;
-        if (description) task.description = description;
-        if (status && ['todo', 'inProgress', 'done', 'backlog', 'blocked'].includes(status)) {
-            task.status = status;
-        }
-        if (priority && ['low', 'medium', 'high', 'critical'].includes(priority)) {
-            task.priority = priority;
-        }
-        if (dueDate) task.dueDate = new Date(dueDate);
+        task!.title = title;
+        task!.description = description;
+        task!.dueDate = dueDate ? new Date(dueDate) : undefined;
+        task!.priority = priority;
+        task!.status = status;
+        
+        // Handle assignees
         if (assignees) {
-            task.assignees = assignees.map((id: string) => new Types.ObjectId(id));
-        }
-        if (labels) task.labels = labels;
-        if (typeof isComplete === 'boolean') {
-            task.isComplete = isComplete;
-            if (isComplete) {
-                task.completedAt = new Date();
-            } else {
-                task.completedAt = undefined;
-            }
+            const assigneeIds = Array.isArray(assignees) ? assignees : [assignees];
+            task!.assignees = assigneeIds.map(id => new Types.ObjectId(id));
         }
 
-        await task.save();
+        await task!.save();
 
-        res.json({
-            message: 'Task updated successfully',
-            task
-        });
+        res.json({ message: 'Task updated successfully' });
     } catch (error) {
         console.error('Error updating task:', error);
         res.status(500).json({ message: 'An error occurred while updating the task' });
     }
 }
 
-// Delete a task
-export async function oneTaskDeleteController(req: Request, res: Response) {
+// Delete task
+export async function oneTaskDeleteController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
         }
 
-        const taskId = new Types.ObjectId(req.params.taskId);
-        
-        const task = await Task.findById(taskId);
-        if (!task) {
-            return res.status(404).json({ message: "Task not found" });
-        }
+        const { taskId } = req.params;
 
-        // Check if user has access to the project
-        const project = await Project.findOne({
-            _id: task.project,
-            $or: [
-                { createdBy: userId },
-                { 'members.user': userId, 'members.role': { $in: ['owner', 'admin'] } }
-            ]
+        const task = await Task.findOne({
+            _id: taskId,
+            createdBy: userId
         });
 
-        if (!project) {
-            return res.status(404).json({ message: "You don't have permission to delete this task" });
+        if (!task) {
+            res.status(404).json({ message: 'Task not found or you do not have permission to delete it' });
         }
 
-        await task.deleteOne();
+        await task!.deleteOne();
 
         res.json({ message: 'Task deleted successfully' });
     } catch (error) {

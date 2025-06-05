@@ -1,22 +1,24 @@
 //Configuration for Sessions
 
 import session from "express-session";
-import mongoStore from "connect-mongo";
+import MongoStore from "connect-mongo";
 import { Application } from "express";
 
-export default function sessionSetup(app:Application){
+export default function sessionSetup(app: Application) {
     app.use(session({
-        secret: process.env.SESSION_SECRET!,
+        secret: process.env.SESSION_SECRET || 'your-secret-key',
         resave: false,
-        saveUninitialized: true,
-        store: mongoStore.create({
-            mongoUrl: process.env.MONGO_URI,
-            collectionName: 'sessions'
+        saveUninitialized: false,
+        store: MongoStore.create({
+            mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/taskwave',
+            collectionName: 'sessions',
+            ttl: 14 * 24 * 60 * 60 // 14 days
         }),
         cookie: {
-            maxAge: 1000 * 60 * 60 * 24,
+            maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
             httpOnly: true,
-            secure: false
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
         }
     }));
 }

@@ -1,0 +1,68 @@
+<%- include('../partials/header', {title: user.firstName + ' ' + user.lastName + ' | TaskWave'}); %>
+
+<main class="py-4">
+  <div class="container">
+    <div class="row g-4">
+      <!-- Profile Sidebar -->
+      <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center">
+            <div class="mb-4">
+              <% if (user.avatar) { %>
+                <img src="<%= user.avatar %>" alt="<%= user.firstName %>" class="rounded-circle mb-3" width="120" height="120">
+              <% } else { %>
+                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px;">
+                  <i class="fas fa-user fa-3x text-primary"></i>
+                </div>
+              <% } %>
+              <h4 class="mb-1"><%= user.firstName %> <%= user.lastName %></h4>
+              <% if (user.bio) { %>
+                <p class="text-muted mb-0"><%= user.bio %></p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-lg-8">
+        <!-- Public Projects -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Public Projects</h5>
+            </div>
+          </div>
+          <div class="card-body">
+            <% if (projects && projects.length > 0) { %>
+              <div class="list-group list-group-flush">
+                <% projects.forEach(project => { %>
+                  <a href="/projects/<%= project._id %>" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-1"><%= project.name %></h6>
+                        <p class="text-muted mb-0 small"><%= project.description?.substring(0, 100) %><%= project.description?.length > 100 ? '...' : '' %></p>
+                      </div>
+                      <span class="badge bg-<%= project.status === 'active' ? 'success' : project.status === 'on-hold' ? 'warning' : 'secondary' %>">
+                        <%= project.status.charAt(0).toUpperCase() + project.status.slice(1) %>
+                      </span>
+                    </div>
+                  </a>
+                <% }); %>
+              </div>
+            <% } else { %>
+              <div class="text-center py-4">
+                <div class="text-muted">
+                  <i class="fas fa-project-diagram fa-2x mb-3"></i>
+                  <p class="mb-0">No public projects</p>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer'); %>

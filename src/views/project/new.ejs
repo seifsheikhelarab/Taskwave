@@ -27,7 +27,7 @@
               </div>
             <% } %>
 
-            <form action="/projects" method="POST">
+            <form action="/projects/new" method="POST">
               <div class="row g-3">
                 <!-- Project Name -->
                 <div class="col-md-12">
@@ -85,7 +85,7 @@
                       name="startDate" 
                       value="<%= typeof oldInput !== 'undefined' ? oldInput.startDate : '' %>"
                     >
-                    <label for="startDate">Start Date</label>
+                    <label for="startDate">Start Date (Optional)</label>
                     <% if (typeof errors !== 'undefined') { %>
                       <% const startDateError = errors.find(e => e.param === 'startDate'); %>
                       <% if (startDateError) { %>
@@ -106,7 +106,7 @@
                       name="dueDate" 
                       value="<%= typeof oldInput !== 'undefined' ? oldInput.dueDate : '' %>"
                     >
-                    <label for="dueDate">Due Date</label>
+                    <label for="dueDate">Due Date (Optional)</label>
                     <% if (typeof errors !== 'undefined') { %>
                       <% const dueDateError = errors.find(e => e.param === 'dueDate'); %>
                       <% if (dueDateError) { %>
@@ -119,7 +119,7 @@
                 </div>
 
                 <!-- Project Visibility -->
-                <div class="col-md-6">
+                <div class="col-md-12">
                   <label class="form-label">Project Visibility</label>
                   <div class="form-check">
                     <input 
@@ -150,71 +150,10 @@
                   </div>
                 </div>
 
-                <!-- Project Template -->
-                <div class="col-md-6">
-                  <label class="form-label">Project Template (Optional)</label>
-                  <select 
-                    class="form-select <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'template') ? 'is-invalid' : '' %>" 
-                    id="template" 
-                    name="template"
-                  >
-                    <option value="">No template</option>
-                    <option value="kanban" <%= typeof oldInput !== 'undefined' && oldInput.template === 'kanban' ? 'selected' : '' %>>Kanban Board</option>
-                    <option value="scrum" <%= typeof oldInput !== 'undefined' && oldInput.template === 'scrum' ? 'selected' : '' %>>Scrum Board</option>
-                    <option value="basic" <%= typeof oldInput !== 'undefined' && oldInput.template === 'basic' ? 'selected' : '' %>>Basic Task List</option>
-                  </select>
-                  <% if (typeof errors !== 'undefined') { %>
-                    <% const templateError = errors.find(e => e.param === 'template'); %>
-                    <% if (templateError) { %>
-                      <div class="invalid-feedback">
-                        <%= templateError.msg %>
-                      </div>
-                    <% } %>
-                  <% } %>
-                </div>
-
-                <!-- Team Members (for private projects) -->
-                <div class="col-md-12" id="teamMembersSection" style="<%= typeof oldInput !== 'undefined' && oldInput.visibility === 'private' ? '' : 'display: none;' %>">
-                  <label class="form-label">Select Team Members</label>
-                  <div class="card border">
-                    <div class="card-body py-2" style="max-height: 200px; overflow-y: auto;">
-                      <!-- Dummy team members - replace with real data from your backend -->
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="members" id="member1" value="user1" <%= typeof oldInput !== 'undefined' && oldInput.members && oldInput.members.includes('user1') ? 'checked' : '' %>>
-                        <label class="form-check-label d-flex align-items-center" for="member1">
-                          <img src="https://randomuser.me/api/portraits/women/44.jpg" class="rounded-circle me-2" width="24" height="24">
-                          Sarah Johnson (Product Manager)
-                        </label>
-                      </div>
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="members" id="member2" value="user2" <%= typeof oldInput !== 'undefined' && oldInput.members && oldInput.members.includes('user2') ? 'checked' : '' %>>
-                        <label class="form-check-label d-flex align-items-center" for="member2">
-                          <img src="https://randomuser.me/api/portraits/men/32.jpg" class="rounded-circle me-2" width="24" height="24">
-                          Michael Chen (Developer)
-                        </label>
-                      </div>
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="members" id="member3" value="user3" <%= typeof oldInput !== 'undefined' && oldInput.members && oldInput.members.includes('user3') ? 'checked' : '' %>>
-                        <label class="form-check-label d-flex align-items-center" for="member3">
-                          <img src="https://randomuser.me/api/portraits/women/68.jpg" class="rounded-circle me-2" width="24" height="24">
-                          Emma Davis (Designer)
-                        </label>
-                      </div>
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="members" id="member4" value="user4" <%= typeof oldInput !== 'undefined' && oldInput.members && oldInput.members.includes('user4') ? 'checked' : '' %>>
-                        <label class="form-check-label d-flex align-items-center" for="member4">
-                          <img src="https://randomuser.me/api/portraits/men/75.jpg" class="rounded-circle me-2" width="24" height="24">
-                          David Wilson (QA Tester)
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
                 <!-- Submit Button -->
-                <div class="col-md-12 mt-3">
+                <div class="col-12 mt-4">
                   <button type="submit" class="btn btn-primary w-100 py-3">
-                    <i class="fas fa-plus-circle me-2"></i> Create Project
+                    <i class="fas fa-plus-circle me-2"></i>Create Project
                   </button>
                 </div>
               </div>
@@ -227,19 +166,3 @@
 </main>
 
 <%- include('../partials/footer'); %>
-
-<script>
-  // Show/hide team members section based on visibility selection
-  document.addEventListener('DOMContentLoaded', function() {
-    const publicRadio = document.getElementById('visibilityPublic');
-    const privateRadio = document.getElementById('visibilityPrivate');
-    const teamMembersSection = document.getElementById('teamMembersSection');
-
-    function toggleTeamMembers() {
-      teamMembersSection.style.display = privateRadio.checked ? 'block' : 'none';
-    }
-
-    publicRadio.addEventListener('change', toggleTeamMembers);
-    privateRadio.addEventListener('change', toggleTeamMembers);
-  });
-</script>

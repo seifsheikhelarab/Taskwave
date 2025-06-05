@@ -41,7 +41,7 @@ export async function signupPostController(req: Request, res: Response) {
         // Log user in
         req.session.userId = (user._id as Types.ObjectId).toString();
         
-        res.redirect('/me');
+        res.redirect('/user/profile');
     } catch (error) {
         console.error('Signup error:', error);
         res.render("authentication/signup", {
@@ -77,7 +77,7 @@ export async function loginPostController(req: Request, res: Response) {
             req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
         }
 
-        res.redirect('/me');
+        res.redirect('/user/profile');
     } catch (error) {
         console.error('Login error:', error);
         res.render("authentication/login", {
@@ -87,7 +87,7 @@ export async function loginPostController(req: Request, res: Response) {
     }
 }
 
-export function logoutGetController(req: Request, res: Response) {
+export function logoutPostController(req: Request, res: Response) {
     req.session.destroy((err) => {
         if (err) {
             console.error('Logout error:', err);
@@ -121,7 +121,7 @@ export async function resetPostController(req: Request, res: Response) {
 
         // TODO: Send reset email
         // For now, just show the token in development
-        const resetURL = `${req.protocol}://${req.get('host')}/reset/${resetToken}`;
+        const resetURL = `${req.protocol}://${req.get('host')}/auth/reset/${resetToken}`;
         console.log('Reset URL:', resetURL);
 
         res.render("authentication/reset-confirm", {
@@ -206,7 +206,7 @@ export async function resetConfirmPostController(req: Request, res: Response) {
         // Log user in
         req.session.userId = (user._id as Types.ObjectId).toString();
 
-        res.redirect('/me');
+        res.redirect('/user/profile');
     } catch (error) {
         console.error('Reset password error:', error);
         res.render("authentication/reset-password", {

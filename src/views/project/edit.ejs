@@ -1,0 +1,139 @@
+<%- include('../partials/header.ejs', {title: 'Edit Project | TaskWave'}); %>
+
+<main class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4 p-sm-5">
+            <div class="text-center mb-4">
+              <h2 class="fw-bold">Edit Project</h2>
+              <p class="text-muted">Update your project details</p>
+            </div>
+
+            <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+              <div class="alert alert-danger">
+                <ul class="mb-0">
+                  <% errors.forEach(error => { %>
+                    <li><%= error.msg %></li>
+                  <% }); %>
+                </ul>
+              </div>
+            <% } %>
+
+            <form action="/projects/<%= project._id %>/edit" method="POST">
+              <div class="mb-3">
+                <div class="form-floating">
+                  <input 
+                    type="text" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'name') ? 'is-invalid' : '' %>" 
+                    id="name" 
+                    name="name" 
+                    placeholder="Project Name" 
+                    value="<%= typeof oldInput !== 'undefined' ? oldInput.name : project.name %>"
+                    required
+                  >
+                  <label for="name">Project Name</label>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const nameError = errors.find(e => e.param === 'name'); %>
+                    <% if (nameError) { %>
+                      <div class="invalid-feedback">
+                        <%= nameError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="form-floating">
+                  <textarea 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'description') ? 'is-invalid' : '' %>" 
+                    id="description" 
+                    name="description" 
+                    placeholder="Project Description" 
+                    style="height: 100px"
+                  ><%= typeof oldInput !== 'undefined' ? oldInput.description : project.description %></textarea>
+                  <label for="description">Description</label>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const descriptionError = errors.find(e => e.param === 'description'); %>
+                    <% if (descriptionError) { %>
+                      <div class="invalid-feedback">
+                        <%= descriptionError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="form-floating">
+                  <select 
+                    class="form-select <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'status') ? 'is-invalid' : '' %>" 
+                    id="status" 
+                    name="status"
+                    required
+                  >
+                    <option value="planning" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'planning' ? 'selected' : '' %>>Planning</option>
+                    <option value="in-progress" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'in-progress' ? 'selected' : '' %>>In Progress</option>
+                    <option value="completed" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'completed' ? 'selected' : '' %>>Completed</option>
+                    <option value="on-hold" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'on-hold' ? 'selected' : '' %>>On Hold</option>
+                  </select>
+                  <label for="status">Project Status</label>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const statusError = errors.find(e => e.param === 'status'); %>
+                    <% if (statusError) { %>
+                      <div class="invalid-feedback">
+                        <%= statusError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <div class="form-floating">
+                  <select 
+                    class="form-select <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'visibility') ? 'is-invalid' : '' %>" 
+                    id="visibility" 
+                    name="visibility"
+                    required
+                  >
+                    <option value="public" <%= (typeof oldInput !== 'undefined' ? oldInput.visibility : project.visibility) === 'public' ? 'selected' : '' %>>Public</option>
+                    <option value="private" <%= (typeof oldInput !== 'undefined' ? oldInput.visibility : project.visibility) === 'private' ? 'selected' : '' %>>Private</option>
+                  </select>
+                  <label for="visibility">Project Visibility</label>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const visibilityError = errors.find(e => e.param === 'visibility'); %>
+                    <% if (visibilityError) { %>
+                      <div class="invalid-feedback">
+                        <%= visibilityError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1 py-3">Update Project</button>
+                <a href="/projects/<%= project._id %>" class="btn btn-outline-secondary py-3">Cancel</a>
+              </div>
+            </form>
+
+            <div class="mt-4 pt-4 border-top">
+              <h5 class="text-danger mb-3">Danger Zone</h5>
+              <form action="/projects/<%= project._id %>/edit" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this project? This action cannot be undone.');">
+                <input type="hidden" name="_method" value="DELETE">
+                <button type="submit" class="btn btn-outline-danger">
+                  <i class="fas fa-trash-alt me-2"></i>Delete Project
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer.ejs'); %>

@@ -15,7 +15,7 @@
 
     <!-- Team Members -->
     <div class="row g-4">
-      <% if (team && team.length > 0) { %>
+      <% if (typeof team !== 'undefined' && team && team.length > 0) { %>
         <% team.forEach(member => { %>
           <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm h-100">
@@ -45,7 +45,7 @@
                       <li><a class="dropdown-item" href="/user/<%= member._id %>">
                         <i class="fas fa-user me-2"></i>View Profile
                       </a></li>
-                      <% if (currentUser.role === 'owner' || currentUser.role === 'admin') { %>
+                      <% if (currentUser && (currentUser.role === 'owner' || currentUser.role === 'admin')) { %>
                         <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changeRoleModal" data-member-id="<%= member._id %>">
                           <i class="fas fa-user-tag me-2"></i>Change Role
                         </a></li>

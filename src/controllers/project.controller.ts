@@ -3,6 +3,9 @@ import Project, { IProjectMember } from "../models/project.model.js";
 import Task from "../models/task.model.js";
 import User, { IUser } from "../models/user.model.js";
 import { Types } from "mongoose";
+import Invitation from '../models/invitation.model.js';
+import crypto from 'crypto';
+import { emailService } from '../services/email.service.js';
 
 // Type guard function
 function isProjectNotNull(project: any): project is NonNullable<typeof project> {
@@ -356,7 +359,7 @@ export async function inviteProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.status(401).json({ message: 'Unauthorized' });
+            return res.status(401).json({ message: 'Unauthorized' });
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
@@ -370,36 +373,35 @@ export async function inviteProjectPostController(req: Request, res: Response) {
             ]
         });
 
-        if (!isProjectNotNull(project)) {
-            res.status(404).json({ message: "Project not found or you don't have permission to invite members" });
+        if (!project) {
+            return res.status(404).json({ message: "Project not found or you don't have permission to invite members" });
         }
-
-        // Find user by email
-        const userDoc = await User.findOne({ email });
-        if (!userDoc) {
-            res.status(404).json({ message: "User not found" });
-        }
-
-        const user = userDoc as unknown as IUser & { _id: Types.ObjectId };
 
         // Check if user is already a member
-        if (project!.members.some(m => m.user.toString() === user._id.toString())) {
-            res.status(400).json({ message: "User is already a member of this project" });
+        const userDoc = await User.findOne({ email });
+        if (userDoc && project.members.some(m => m.user.toString() === userDoc._id.toString())) {
+            return res.status(400).json({ message: "User is already a member of this project" });
         }
 
-        // Add user to project
-        const newMember: IProjectMember = {
-            user: user._id,
+        // Create invitation
+        const token = crypto.randomBytes(32).toString('hex');
+        const invitation = await Invitation.create({
+            project: project._id,
+            email,
             role: role || 'member',
-            joinedAt: new Date()
-        };
-        
-        project!.members.push(newMember);
-        await project!.save();
+            token,
+            invitedBy: userId,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
 
-        // TODO: Send email notification
+        // Send invitation email
+        const joinLink = `${process.env.BASE_URL}/projects/${project._id}/join/${token}`;
+        const inviter = await User.findById(userId);
+        if (inviter) {
+            await emailService.sendProjectInvitationEmail(email, project, inviter, joinLink);
+        }
 
-        res.json({ message: 'Invitation sent successfully' });
+        return res.json({ message: 'Invitation sent successfully', joinLink });
     } catch (error) {
         console.error('Error sending invitation:', error);
         res.status(500).json({ message: 'An error occurred while sending the invitation' });
@@ -409,24 +411,15 @@ export async function inviteProjectPostController(req: Request, res: Response) {
 // Show join project page
 export async function joinProjectGetController(req: Request, res: Response) {
     try {
-        const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/login');
+        const { projectId, token } = req.params;
+        const invitation = await Invitation.findOne({ project: projectId, token, status: 'pending', expiresAt: { $gt: new Date() } });
+        if (!invitation) {
+            return res.status(400).render('error', { message: 'Invalid or expired invitation link.' });
         }
-
-        const { token } = req.params;
-        // TODO: Validate invitation token
-
-        res.render("project/join", {
-            token,
-            errors: [],
-            oldInput: {}
-        });
+        res.render('project/join', { token, projectId, email: invitation.email, errors: [], oldInput: {} });
     } catch (error) {
         console.error('Error showing join page:', error);
-        res.status(500).render("error", {
-            message: "An error occurred while processing your request"
-        });
+        res.status(500).render('error', { message: 'An error occurred while processing your request' });
     }
 }
 
@@ -435,16 +428,29 @@ export async function joinProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.status(401).json({ message: 'Unauthorized' });
+            return res.status(401).json({ message: 'Unauthorized' });
         }
-
-        const { token } = req.params;
-        // TODO: Validate invitation token and add user to project
-
-        res.json({ message: 'Successfully joined the project' });
+        const { projectId, token } = req.params;
+        const invitation = await Invitation.findOne({ project: projectId, token, status: 'pending', expiresAt: { $gt: new Date() } });
+        if (!invitation) {
+            return res.status(400).render('error', { message: 'Invalid or expired invitation link.' });
+        }
+        // Add user to project
+        const project = await Project.findById(projectId);
+        if (!project) {
+            return res.status(404).render('error', { message: 'Project not found.' });
+        }
+        if (project.members.some(m => m.user.toString() === userId)) {
+            return res.status(400).render('error', { message: 'You are already a member of this project.' });
+        }
+        project.members.push({ user: new Types.ObjectId(userId), role: invitation.role, joinedAt: new Date() });
+        await project.save();
+        invitation.status = 'accepted';
+        await invitation.save();
+        res.redirect(`/projects/${projectId}`);
     } catch (error) {
         console.error('Error joining project:', error);
-        res.status(500).json({ message: 'An error occurred while joining the project' });
+        res.status(500).render('error', { message: 'An error occurred while joining the project' });
     }
 }
 

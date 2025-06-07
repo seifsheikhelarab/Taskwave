@@ -111,7 +111,7 @@ export async function oneBoardPutController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
         }
 
         const projectId = req.params.boardId;
@@ -126,15 +126,15 @@ export async function oneBoardPutController(req: Request, res: Response) {
         });
 
         if (!project) {
-            return res.status(404).json({ message: "Board not found or you don't have permission to update it" });
+            res.status(404).json({ message: "Board not found or you don't have permission to update it" });
         }
 
         // Update project
-        project.name = name;
-        project.description = description;
-        project.status = status;
-        project.visibility = visibility;
-        await project.save();
+        project!.name = name;
+        project!.description = description;
+        project!.status = status;
+        project!.visibility = visibility;
+        await project!.save();
 
         res.json({ message: 'Board updated successfully' });
     } catch (error) {
@@ -148,7 +148,7 @@ export async function oneBoardDeleteController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
         }
 
         const projectId = req.params.boardId;
@@ -158,10 +158,10 @@ export async function oneBoardDeleteController(req: Request, res: Response) {
         });
 
         if (!project) {
-            return res.status(404).json({ message: "Board not found or you don't have permission to delete it" });
+            res.status(404).json({ message: "Board not found or you don't have permission to delete it" });
         }
 
-        await project.deleteOne();
+        await project!.deleteOne();
         res.json({ message: 'Board deleted successfully' });
     } catch (error) {
         console.error('Error deleting board:', error);

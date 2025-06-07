@@ -40,6 +40,10 @@ router.route("/:projectId/join")
     .get(joinProjectGetController)
     .post(joinProjectPostController)
 
+router.route("/:projectId/join/:token")
+    .get(joinProjectGetController)
+    .post(joinProjectPostController)
+
 router.route("/:projectId/leave")
     .get(leaveProjectGetController)
     .post(leaveProjectPostController)

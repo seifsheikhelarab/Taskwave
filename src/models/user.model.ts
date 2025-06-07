@@ -1,8 +1,9 @@
-import mongoose, { Document, Model, Schema } from 'mongoose';
+import mongoose, { Document, Model, Schema, Types } from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
 export interface IUser extends Document {
+    _id: Types.ObjectId;
     firstName: string;
     lastName: string;
     email: string;
@@ -13,7 +14,7 @@ export interface IUser extends Document {
     role: 'admin' | 'member' | 'guest';
     avatar: string;
     isActive: boolean;
-    oauthProvider?: 'google' | 'twitter' | null;
+    oauthProvider?: 'google' | 'twitter' | 'github' | null;
     oauthId?: string;
     lastActive?: Date;
     createdAt: Date;
@@ -30,54 +31,56 @@ export interface IUserModel extends Model<IUser> {
 }
 
 const userSchema = new Schema<IUser, IUserModel>({
-firstName: {
-    type: String,
-    required: [true, 'First name is required'],
-    trim: true,
-    maxlength: [50, 'First name cannot be more than 50 characters']
-},
-lastName: {
-    type: String,
-    required: [true, 'Last name is required'],
-    trim: true,
-    maxlength: [50, 'Last name cannot be more than 50 characters']
-},
-email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,
-    lowercase: true,
-},
-password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [8, 'Password must be at least 8 characters'],
-    select: false
-},
-passwordChangedAt: Date,
-passwordResetToken: String,
-passwordResetExpires: Date,
-role: {
-    type: String,
-    enum: ['admin', 'member', 'guest'],
-    default: 'member'
-},
-avatar: {
-    type: String,
-    default: 'default.jpg'
-},
-isActive: {
-    type: Boolean,
-    default: true,
-    select: false
-},
-oauthProvider: {
-    type: String,
-    enum: ['google', 'github', null],
-    default: null
-},
-oauthId: String,
-lastActive: Date
+    firstName: {
+        type: String,
+        required: [true, 'First name is required'],
+        trim: true,
+        maxlength: [50, 'First name cannot be more than 50 characters']
+    },
+    lastName: {
+        type: String,
+        required: [true, 'Last name is required'],
+        trim: true,
+        maxlength: [50, 'Last name cannot be more than 50 characters']
+    },
+    email: {
+        type: String,
+        required: [true, 'Email is required'],
+        unique: true,
+        lowercase: true,
+    },
+    password: {
+        type: String,
+        required: function(this: IUser) {
+            return !this.oauthProvider; // Only required if not using OAuth
+        },
+        minlength: [8, 'Password must be at least 8 characters'],
+        select: false
+    },
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    role: {
+        type: String,
+        enum: ['admin', 'member', 'guest'],
+        default: 'member'
+    },
+    avatar: {
+        type: String,
+        default: 'default.jpg'
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+        select: false
+    },
+    oauthProvider: {
+        type: String,
+        enum: ['google', 'twitter', 'github', null],
+        default: null
+    },
+    oauthId: String,
+    lastActive: Date
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -136,6 +139,6 @@ userSchema.methods.createPasswordResetToken = function(this: IUser): string {
     return resetToken;
 };
 
-const User = mongoose.model<IUser, IUserModel>('User', userSchema);
+export const User = mongoose.model<IUser, IUserModel>('User', userSchema);
 
 export default User;

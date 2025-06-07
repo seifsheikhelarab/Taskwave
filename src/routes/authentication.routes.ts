@@ -1,4 +1,5 @@
 import express from "express";
+import passport from 'passport';
 import { 
     loginGetController, 
     loginPostController, 
@@ -8,7 +9,9 @@ import {
     resetGetController, 
     resetPostController, 
     signupGetController, 
-    signupPostController 
+    signupPostController,
+    googleCallbackController,
+    twitterCallbackController
 } from "../controllers/authentication.controller.js";
 import { isNotAuthenticated } from "../middleware/auth.middleware.js";
 import { loginLimiter, signupLimiter, passwordResetLimiter } from "../middleware/auth.rate-limit.js";
@@ -35,5 +38,25 @@ router.route("/reset")
 router.route("/reset/:token")
     .get(isNotAuthenticated, resetConfirmGetController)
     .post(isNotAuthenticated, passwordResetLimiter, resetConfirmPostController);
+
+// OAuth routes
+router.get('/google', isNotAuthenticated, passport.authenticate('google', { 
+    scope: ['profile', 'email']
+}));
+router.get('/google/callback', 
+    passport.authenticate('google', { 
+        failureRedirect: '/auth/login'
+    }),
+    googleCallbackController
+);
+
+// Twitter OAuth routes
+router.get('/twitter', isNotAuthenticated, passport.authenticate('twitter'));
+router.get('/twitter/callback',
+    passport.authenticate('twitter', {
+        failureRedirect: '/auth/login'
+    }),
+    twitterCallbackController
+);
 
 export default router;

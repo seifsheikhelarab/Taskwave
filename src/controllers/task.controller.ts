@@ -3,79 +3,130 @@ import Task, { ITask } from "../models/task.model.js";
 import Project from "../models/project.model.js";
 import User from "../models/user.model.js";
 import { Types } from "mongoose";
+import { emailService } from "../services/email.service.js";
 
-// Get all tasks for a project or user
+// Get all tasks
 export async function tasksGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.redirect('/auth/login');
+            res.redirect('/auth/login');
+            return;
         }
 
+        const { search, status, priority, sort } = req.query;
         const projectId = req.params.projectId;
-        let tasks;
-        let project;
-        let viewData: any = {
-            title: 'My Tasks | TaskWave',
-            tasks: [],
-            project: null,
-            user: res.locals.user
+
+        // Build query
+        const query: any = {
+            $or: [
+                { createdBy: userId },
+                { assignees: userId }
+            ]
         };
 
+        // Add project filter if specified
         if (projectId) {
-            // Get tasks for a specific project
-            project = await Project.findOne({
-                _id: new Types.ObjectId(projectId),
-                $or: [
-                    { createdBy: userId },
-                    { 'members.user': userId }
-                ]
-            });
+            query.project = new Types.ObjectId(projectId);
+        }
 
-            if (!project) {
-                return res.status(404).render("error", {
-                    message: "Project not found or you don't have access to it"
-                });
+        // Add search filter
+        if (search) {
+            query.$and = [
+                {
+                    $or: [
+                        { title: { $regex: search, $options: 'i' } },
+                        { description: { $regex: search, $options: 'i' } }
+                    ]
+                }
+            ];
+        }
+
+        // Add status filter
+        if (status) {
+            query.status = status;
+        }
+
+        // Add priority filter
+        if (priority) {
+            query.priority = priority;
+        }
+
+        // Build sort object
+        let sortObj: any = { createdAt: -1 }; // Default sort
+        if (sort) {
+            switch (sort) {
+                case 'dueDate':
+                    sortObj = { dueDate: 1 };
+                    break;
+                case 'priority':
+                    sortObj = { 
+                        priority: {
+                            $cond: {
+                                if: { $eq: ['$priority', 'high'] },
+                                then: 1,
+                                else: {
+                                    $cond: {
+                                        if: { $eq: ['$priority', 'medium'] },
+                                        then: 2,
+                                        else: 3
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    break;
+                case 'createdAt':
+                    sortObj = { createdAt: -1 };
+                    break;
             }
+        }
 
-            tasks = await Task.find({ project: projectId })
-                .populate('assignees', 'firstName lastName email avatar')
-                .populate('createdBy', 'firstName lastName email avatar')
-                .sort({ createdAt: -1 })
-                .lean();
+        const tasks = await Task.find(query)
+            .sort(sortObj)
+            .populate('project', 'name')
+            .populate('assignees', 'firstName lastName email avatar')
+            .lean();
 
-            viewData.title = `${project.name} Tasks | TaskWave`;
-            viewData.project = project;
-        } else {
-            // Get all tasks assigned to the user
-            tasks = await Task.find({ assignees: userId })
-                .populate('project', 'name')
-                .populate('assignees', 'firstName lastName email avatar')
-                .populate('createdBy', 'firstName lastName email avatar')
-                .sort({ dueDate: 1 })
+        // Get project if projectId is specified
+        let project = null;
+        if (projectId) {
+            project = await Project.findById(projectId)
+                .populate('members.user', 'firstName lastName email avatar')
                 .lean();
         }
 
         // Calculate task statistics
         const taskCount = tasks.length;
-        const completedTasks = tasks.filter(t => t.isComplete).length;
+        const completedTasks = tasks.filter(t => t.status === 'done').length;
+        const inProgressTasks = tasks.filter(t => t.status === 'inProgress').length;
+        const todoTasks = tasks.filter(t => t.status === 'todo').length;
+        
+        // Calculate due soon tasks (due within 7 days and not completed)
         const dueSoonTasks = tasks.filter(t => {
-            if (!t.dueDate || t.isComplete) return false;
-            const dueDate = t.dueDate instanceof Date ? t.dueDate : new Date(t.dueDate);
+            if (!t.dueDate || t.status === 'done') return false;
+            const dueDate = new Date(t.dueDate);
             const now = new Date();
             const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
             return diffDays <= 7 && diffDays > 0;
         }).length;
 
-        viewData.tasks = tasks;
-        viewData.taskCount = taskCount;
-        viewData.completedTasks = completedTasks;
-        viewData.dueSoonTasks = dueSoonTasks;
-
-        return res.render("task/tasks", viewData);
+        res.render("task/tasks", {
+            title: project ? `${project.name} Tasks` : 'My Tasks',
+            tasks,
+            project,
+            query: req.query,
+            taskCount,
+            completedTasks,
+            inProgressTasks,
+            todoTasks,
+            dueSoonTasks,
+            errors: [],
+            oldInput: {}
+        });
     } catch (error) {
         console.error('Error fetching tasks:', error);
-        return res.status(500).render("error", {
+        res.status(500).render("error", {
             message: "An error occurred while fetching tasks"
         });
     }
@@ -86,30 +137,27 @@ export async function newTaskGetController(req: Request, res: Response): Promise
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.redirect('/login');
+            res.redirect('/auth/login');
             return;
         }
 
-        const projectId = new Types.ObjectId(req.params.projectId);
-        
-        // Check if user has access to the project
-        const project = await Project.findOne({
-            _id: projectId,
+        // Get all projects the user has access to
+        const projects = await Project.find({
             $or: [
                 { createdBy: userId },
                 { 'members.user': userId }
             ]
         }).populate('members.user', 'firstName lastName email avatar');
 
-        if (!project) {
+        if (!projects || projects.length === 0) {
             res.status(404).render("error", {
-                message: "Project not found or you don't have access to it"
+                message: "You don't have access to any projects. Please create or join a project first."
             });
             return;
         }
 
         res.render("task/new", {
-            project,
+            projects,
             errors: [],
             oldInput: {}
         });
@@ -167,6 +215,16 @@ export async function newTaskPostController(req: Request, res: Response): Promis
             taskId: `${project.settings.taskPrefix}-${taskCount + 1}`
         });
 
+        // Send emails to assignees
+        if (assignees && assignees.length > 0) {
+            const project = await Project.findById(projectId).select('name').lean();
+            const assigneeUsers = await User.find({ _id: { $in: assignees } }).select('email').lean();
+            
+            for (const assignee of assigneeUsers) {
+                await emailService.sendTaskAssignmentEmail(assignee.email, task, project);
+            }
+        }
+
         // Redirect back to project page
         res.redirect(`/projects/${projectId}`);
     } catch (error) {
@@ -180,11 +238,18 @@ export async function oneTaskGetController(req: Request, res: Response): Promise
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.redirect('/login');
+            res.redirect('/auth/login');
             return;
         }
 
-        const taskId = new Types.ObjectId(req.params.taskId);
+        let taskId;
+        try {
+            taskId = new Types.ObjectId(req.params.taskId);
+        } catch (error) {
+            return res.status(400).render("error", {
+                message: "Invalid task ID format"
+            });
+        }
         
         const task = await Task.findById(taskId).lean();
 
@@ -429,6 +494,16 @@ export async function updateTaskStatusPostController(req: Request, res: Response
         }
         await task.save();
 
+        // Send emails for status change
+        if (status !== task.status) {
+            const project = await Project.findById(task.project).select('name').lean();
+            const assigneeUsers = await User.find({ _id: { $in: task.assignees } }).select('email').lean();
+            
+            for (const assignee of assigneeUsers) {
+                await emailService.sendTaskStatusUpdateEmail(assignee.email, task, project);
+            }
+        }
+
         res.json({
             message: 'Task status updated successfully',
             task
@@ -436,5 +511,142 @@ export async function updateTaskStatusPostController(req: Request, res: Response
     } catch (error) {
         console.error('Error updating task status:', error);
         res.status(500).json({ message: 'An error occurred while updating the task status' });
+    }
+}
+
+// Get search suggestions
+export async function taskSearchSuggestionsController(req: Request, res: Response): Promise<void> {
+    try {
+        const userId = req.session.userId;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+
+        const query = req.query.q as string;
+        if (!query || query.length < 2) {
+            res.json({ suggestions: [] });
+            return;
+        }
+
+        const tasks = await Task.find({
+            $or: [
+                { createdBy: userId },
+                { assignees: userId }
+            ],
+            $and: [
+                {
+                    $or: [
+                        { title: { $regex: query, $options: 'i' } },
+                        { description: { $regex: query, $options: 'i' } }
+                    ]
+                }
+            ]
+        })
+        .populate('project', 'name')
+        .limit(5)
+        .lean();
+
+        const suggestions = tasks.map(task => ({
+            title: task.title,
+            project: task.project
+        }));
+
+        res.json({ suggestions });
+    } catch (error) {
+        console.error('Error fetching search suggestions:', error);
+        res.status(500).json({ message: 'An error occurred while fetching suggestions' });
+    }
+}
+
+// Create task
+export async function taskCreatePostController(req: Request, res: Response): Promise<void> {
+    try {
+        const { title, description, priority, dueDate, projectId, assignees } = req.body;
+        const userId = req.session.userId;
+
+        if (!userId) {
+            res.redirect('/auth/login');
+            return;
+        }
+
+        const task = await Task.create({
+            title,
+            description,
+            priority,
+            dueDate,
+            project: projectId,
+            createdBy: userId,
+            assignees: assignees || []
+        });
+
+        // Send emails to assignees
+        if (assignees && assignees.length > 0) {
+            const project = await Project.findById(projectId).select('name').lean();
+            const assigneeUsers = await User.find({ _id: { $in: assignees } }).select('email').lean();
+            
+            for (const assignee of assigneeUsers) {
+                await emailService.sendTaskAssignmentEmail(assignee.email, task, project);
+            }
+        }
+
+        res.redirect('/tasks');
+    } catch (error) {
+        console.error('Error creating task:', error);
+        res.status(500).render("error", {
+            message: "An error occurred while creating task"
+        });
+    }
+}
+
+// Update task
+export async function taskUpdatePostController(req: Request, res: Response): Promise<void> {
+    try {
+        const { title, description, priority, dueDate, status, assignees } = req.body;
+        const taskId = req.params.id;
+        const userId = req.session.userId;
+
+        if (!userId) {
+            res.redirect('/auth/login');
+            return;
+        }
+
+        const task = await Task.findById(taskId);
+        if (!task) {
+            res.status(404).render("error", {
+                message: "Task not found"
+            });
+            return;
+        }
+
+        // Check if status changed
+        const statusChanged = task.status !== status;
+
+        // Update task
+        task.title = title;
+        task.description = description;
+        task.priority = priority;
+        task.dueDate = dueDate;
+        task.status = status;
+        task.assignees = assignees || [];
+
+        await task.save();
+
+        // Send emails for status change
+        if (statusChanged) {
+            const project = await Project.findById(task.project).select('name').lean();
+            const assigneeUsers = await User.find({ _id: { $in: task.assignees } }).select('email').lean();
+            
+            for (const assignee of assigneeUsers) {
+                await emailService.sendTaskStatusUpdateEmail(assignee.email, task, project);
+            }
+        }
+
+        res.redirect('/tasks');
+    } catch (error) {
+        console.error('Error updating task:', error);
+        res.status(500).render("error", {
+            message: "An error occurred while updating task"
+        });
     }
 }

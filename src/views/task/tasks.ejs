@@ -44,6 +44,69 @@
       </div>
     </div>
 
+    <!-- Search and Filter Section -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <form action="/tasks" method="GET" class="row g-3" id="searchForm">
+          <div class="col-md-4 position-relative">
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-search"></i></span>
+              <input type="text" class="form-control" name="search" id="searchInput" 
+                     placeholder="Search tasks by title, description, or assignee..." 
+                     value="<%= typeof query !== 'undefined' ? query.search : '' %>"
+                     autocomplete="off">
+            </div>
+            <div id="searchSuggestions" class="position-absolute w-100 bg-white shadow-sm rounded-bottom" 
+                 style="display: none; z-index: 1000; max-height: 200px; overflow-y: auto;">
+            </div>
+          </div>
+          <div class="col-md-2">
+            <select class="form-select" name="status">
+              <option value="">All Status</option>
+              <option value="todo" <%= typeof query !== 'undefined' && query.status === 'todo' ? 'selected' : '' %>>To Do</option>
+              <option value="inProgress" <%= typeof query !== 'undefined' && query.status === 'inProgress' ? 'selected' : '' %>>In Progress</option>
+              <option value="done" <%= typeof query !== 'undefined' && query.status === 'done' ? 'selected' : '' %>>Done</option>
+              <option value="backlog" <%= typeof query !== 'undefined' && query.status === 'backlog' ? 'selected' : '' %>>Backlog</option>
+              <option value="blocked" <%= typeof query !== 'undefined' && query.status === 'blocked' ? 'selected' : '' %>>Blocked</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select class="form-select" name="priority">
+              <option value="">All Priority</option>
+              <option value="low" <%= typeof query !== 'undefined' && query.priority === 'low' ? 'selected' : '' %>>Low</option>
+              <option value="medium" <%= typeof query !== 'undefined' && query.priority === 'medium' ? 'selected' : '' %>>Medium</option>
+              <option value="high" <%= typeof query !== 'undefined' && query.priority === 'high' ? 'selected' : '' %>>High</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select class="form-select" name="sort">
+              <option value="dueDate" <%= typeof query !== 'undefined' && query.sort === 'dueDate' ? 'selected' : '' %>>Due Date</option>
+              <option value="priority" <%= typeof query !== 'undefined' && query.sort === 'priority' ? 'selected' : '' %>>Priority</option>
+              <option value="createdAt" <%= typeof query !== 'undefined' && query.sort === 'createdAt' ? 'selected' : '' %>>Created Date</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="fas fa-filter me-2"></i>Filter
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Search Results Summary -->
+    <% if (typeof query !== 'undefined' && query.search) { %>
+      <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        Showing results for "<%= query.search %>"
+        <% if (tasks.length === 0) { %>
+          - No tasks found
+        <% } else { %>
+          - Found <%= tasks.length %> task<%= tasks.length === 1 ? '' : 's' %>
+        <% } %>
+      </div>
+    <% } %>
+
     <!-- Task Stats -->
     <div class="row g-4 mb-4">
       <div class="col-md-4">
@@ -140,8 +203,8 @@
                     </td>
                   <% } %>
                   <td>
-                    <span class="badge bg-<%= task.status === 'todo' ? 'secondary' : task.status === 'inProgress' ? 'warning' : 'success' %>">
-                      <%= task.status.charAt(0).toUpperCase() + task.status.slice(1) %>
+                    <span class="badge bg-<%= task.status === 'done' ? 'success' : task.status === 'inProgress' ? 'primary' : task.status === 'blocked' ? 'danger' : task.status === 'backlog' ? 'warning' : 'secondary' %>">
+                      <%= task.status %>
                     </span>
                   </td>
                   <td>
@@ -344,6 +407,66 @@ document.querySelectorAll('[data-edit-task]').forEach(button => {
         e.preventDefault();
         const taskId = this.dataset.editTask;
         window.location.href = `/tasks/${taskId}/edit`;
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchSuggestions = document.getElementById('searchSuggestions');
+    let searchTimeout;
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            searchSuggestions.style.display = 'none';
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            fetch(`/tasks/search/suggestions?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        searchSuggestions.innerHTML = data.suggestions.map(suggestion => `
+                            <div class="p-2 border-bottom suggestion-item" style="cursor: pointer;">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-tasks me-2 text-muted"></i>
+                                    <div>
+                                        <div class="fw-bold">${suggestion.title}</div>
+                                        <small class="text-muted">${suggestion.project ? suggestion.project.name : 'No Project'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        searchSuggestions.style.display = 'block';
+                        
+                        // Add click handlers to suggestions
+                        document.querySelectorAll('.suggestion-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                searchInput.value = this.querySelector('.fw-bold').textContent;
+                                searchSuggestions.style.display = 'none';
+                                document.getElementById('searchForm').submit();
+                            });
+                        });
+                    } else {
+                        searchSuggestions.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching suggestions:', error);
+                    searchSuggestions.style.display = 'none';
+                });
+        }, 300);
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+            searchSuggestions.style.display = 'none';
+        }
     });
 });
 </script>

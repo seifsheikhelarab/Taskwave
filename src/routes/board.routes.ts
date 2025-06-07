@@ -17,7 +17,7 @@ router.route("/new")
     .get(newBoardGetController)
     .post(newBoardPostController)
 
-router.route("/boardId")
+router.route("/:boardId")
     .get(oneBoardGetController)
     .put(oneBoardPutController)
     .delete(oneBoardDeleteController)

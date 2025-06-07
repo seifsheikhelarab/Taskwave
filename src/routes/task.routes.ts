@@ -6,7 +6,8 @@ import {
     oneTaskGetController, 
     oneTaskPutController, 
     tasksGetController,
-    updateTaskStatusController
+    updateTaskStatusController,
+    taskSearchSuggestionsController
 } from "../controllers/task.controller.js";
 
 const router = express.Router();
@@ -24,9 +25,13 @@ router.route("/project/:projectId/create")
     .post(newTaskPostController);
 
 // Create task (general)
-router.route("/create")
+router.route("/new")
     .get(newTaskGetController)
     .post(newTaskPostController);
+
+// Task search suggestions
+router.route("/search/suggestions")
+    .get(taskSearchSuggestionsController);
 
 // Task status update
 router.route("/:taskId/status")

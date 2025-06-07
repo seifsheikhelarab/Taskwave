@@ -1,12 +1,14 @@
 import express, { Request, Response } from "express";
-import User from "../models/user.model.js";
+import User, { IUser } from "../models/user.model.js";
 import crypto from 'crypto';
 import { Types } from 'mongoose';
+import { logger } from '../config/logger.config.js';
 
 // Extend Express Session interface
 declare module 'express-session' {
     interface SessionData {
         userId: string;
+        isAuthenticated: boolean;
     }
 }
 
@@ -220,4 +222,43 @@ export async function resetConfirmPostController(req: Request, res: Response) {
 export function googleGetController(req: Request, res: Response) {
     // Google OAuth callback - user is already authenticated by passport
     res.redirect('/me');
+}
+
+// OAuth Controllers
+export async function googleCallbackController(req: Request, res: Response) {
+    try {
+        if (!req.user) {
+            throw new Error('No user data from Google');
+        }
+
+        const user = req.user as IUser;
+        req.session.userId = user._id.toString();
+        req.session.isAuthenticated = true;
+
+        res.redirect('/projects');
+    } catch (error) {
+        logger.error('Google OAuth error:', error);
+        res.status(500).render("error", {
+            message: "An error occurred during Google authentication"
+        });
+    }
+}
+
+export async function twitterCallbackController(req: Request, res: Response) {
+    try {
+        if (!req.user) {
+            throw new Error('No user data from Twitter');
+        }
+
+        const user = req.user as IUser;
+        req.session.userId = user._id.toString();
+        req.session.isAuthenticated = true;
+
+        res.redirect('/projects');
+    } catch (error) {
+        logger.error('Twitter OAuth error:', error);
+        res.status(500).render("error", {
+            message: "An error occurred during Twitter authentication"
+        });
+    }
 }

@@ -4,10 +4,12 @@ dotenv.config();
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import passport from "passport";
 import { router } from "./routes/main.routes.js";
 import databaseSetup from "./config/database.config.js";
 import middlewareSetup from "./config/middleware.config.js";
 import sessionSetup from "./config/session.config.js";
+import { configurePassport } from "./config/passport.config.js";
 import { logger } from "./config/logger.config.js";
 import authenticationRoutes from './routes/authentication.routes.js';
 
@@ -22,11 +24,16 @@ databaseSetup();
 // Setup session first
 sessionSetup(app);
 
+// Setup passport
+configurePassport();
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Setup other middleware
 middlewareSetup(app);
 
 // Routes
-app.use('/', authenticationRoutes);
+app.use('/auth', authenticationRoutes);
 app.use(router);
 
 // Start server

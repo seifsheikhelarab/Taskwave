@@ -1,14 +1,35 @@
 import { Request, Response } from "express";
-import User from "../models/user.model.js";
-import Project from "../models/project.model.js";
 import { Types } from "mongoose";
+import User, { IUser } from "../models/user.model.js";
+import Project, { IProject, IProjectMember } from "../models/project.model.js";
+import Invitation from "../models/invitation.model.js";
+import { emailService } from "../services/email.service.js";
+import { logger } from '../config/logger.config.js';
+import crypto from 'crypto';
+
+interface TeamMember {
+    _id: Types.ObjectId;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatar?: string;
+    role: string;
+}
 
 // Get team members
-export async function teamGetController(req: Request, res: Response) {
+export async function teamGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.redirect('/auth/login');
+            res.redirect('/auth/login');
+            return;
+        }
+
+        // Get current user
+        const currentUser = await User.findById(userId).select('firstName lastName email avatar').lean();
+        if (!currentUser) {
+            res.redirect('/auth/login');
+            return;
         }
 
         // Get all users who are members of projects with the current user
@@ -17,12 +38,21 @@ export async function teamGetController(req: Request, res: Response) {
                 { createdBy: userId },
                 { 'members.user': userId }
             ]
-        }).select('members');
+        }).select('members').lean();
+
+        // If no projects found, return empty team
+        if (!projects || projects.length === 0) {
+            res.render("team/index", {
+                team: [],
+                currentUser
+            });
+            return;
+        }
 
         const memberIds = new Set<Types.ObjectId>();
         projects.forEach(project => {
             project.members.forEach(member => {
-                memberIds.add(member.user);
+                memberIds.add(new Types.ObjectId(member.user.toString()));
             });
         });
 
@@ -33,7 +63,7 @@ export async function teamGetController(req: Request, res: Response) {
         .lean();
 
         // Add role information
-        const teamWithRoles = team.map(member => {
+        const teamWithRoles: TeamMember[] = team.map(member => {
             const project = projects.find(p => 
                 p.members.some(m => m.user.toString() === member._id.toString())
             );
@@ -42,17 +72,21 @@ export async function teamGetController(req: Request, res: Response) {
             )?.role || 'member';
 
             return {
-                ...member,
+                _id: new Types.ObjectId(member._id.toString()),
+                firstName: member.firstName,
+                lastName: member.lastName,
+                email: member.email,
+                avatar: member.avatar,
                 role
             };
         });
 
         res.render("team/index", {
             team: teamWithRoles,
-            currentUser: res.locals.user
+            currentUser
         });
     } catch (error) {
-        console.error('Error fetching team:', error);
+        logger.error('Error fetching team:', error);
         res.status(500).render("error", {
             message: "An error occurred while fetching team members"
         });
@@ -60,22 +94,31 @@ export async function teamGetController(req: Request, res: Response) {
 }
 
 // Invite team member
-export async function inviteTeamPostController(req: Request, res: Response) {
+export async function inviteTeamPostController(req: Request, res: Response): Promise<void> {
     try {
         const { email, role } = req.body;
         const userId = req.session.userId;
 
         if (!userId) {
-            return res.redirect('/auth/login');
+            res.redirect('/auth/login');
+            return;
+        }
+
+        // Get current user (inviter)
+        const inviter = await User.findById(userId).select('firstName lastName email').lean();
+        if (!inviter) {
+            res.redirect('/auth/login');
+            return;
         }
 
         // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.render("team/index", {
+            res.render("team/index", {
                 errors: [{ msg: "User not found" }],
                 oldInput: req.body
             });
+            return;
         }
 
         // Add user to project
@@ -84,30 +127,40 @@ export async function inviteTeamPostController(req: Request, res: Response) {
         });
 
         if (!project) {
-            return res.render("team/index", {
+            res.render("team/index", {
                 errors: [{ msg: "Project not found" }],
                 oldInput: req.body
             });
+            return;
         }
 
         // Check if user is already a member
         if (project.members.some(m => m.user.toString() === user._id.toString())) {
-            return res.render("team/index", {
+            res.render("team/index", {
                 errors: [{ msg: "User is already a team member" }],
                 oldInput: req.body
             });
+            return;
         }
 
-        project.members.push({
-            user: user._id,
-            role: role || 'member'
+        // Create invitation
+        const token = crypto.randomBytes(32).toString('hex');
+        await Invitation.create({
+            project: project._id,
+            email: user.email,
+            role: role || 'member',
+            token,
+            invitedBy: userId,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         });
 
-        await project.save();
+        // Send invitation email
+        const joinLink = `${process.env.BASE_URL}/projects/${project._id}/join/${token}`;
+        await emailService.sendProjectInvitationEmail(user.email, project, inviter, joinLink);
 
         res.redirect('/team');
     } catch (error) {
-        console.error('Error inviting team member:', error);
+        logger.error('Error inviting team member:', error);
         res.status(500).render("error", {
             message: "An error occurred while inviting team member"
         });
@@ -115,13 +168,14 @@ export async function inviteTeamPostController(req: Request, res: Response) {
 }
 
 // Remove team member
-export async function removeTeamMemberPostController(req: Request, res: Response) {
+export async function removeTeamMemberPostController(req: Request, res: Response): Promise<void> {
     try {
         const { memberId } = req.params;
         const userId = req.session.userId;
 
         if (!userId) {
-            return res.redirect('/auth/login');
+            res.redirect('/auth/login');
+            return;
         }
 
         const project = await Project.findOne({
@@ -129,9 +183,10 @@ export async function removeTeamMemberPostController(req: Request, res: Response
         });
 
         if (!project) {
-            return res.status(404).render("error", {
+            res.status(404).render("error", {
                 message: "Project not found"
             });
+            return;
         }
 
         // Remove member from project
@@ -143,7 +198,7 @@ export async function removeTeamMemberPostController(req: Request, res: Response
 
         res.redirect('/team');
     } catch (error) {
-        console.error('Error removing team member:', error);
+        logger.error('Error removing team member:', error);
         res.status(500).render("error", {
             message: "An error occurred while removing team member"
         });
@@ -151,13 +206,14 @@ export async function removeTeamMemberPostController(req: Request, res: Response
 }
 
 // Change team member role
-export async function changeRolePostController(req: Request, res: Response) {
+export async function changeRolePostController(req: Request, res: Response): Promise<void> {
     try {
         const { memberId, newRole } = req.body;
         const userId = req.session.userId;
 
         if (!userId) {
-            return res.redirect('/auth/login');
+            res.redirect('/auth/login');
+            return;
         }
 
         const project = await Project.findOne({
@@ -165,9 +221,10 @@ export async function changeRolePostController(req: Request, res: Response) {
         });
 
         if (!project) {
-            return res.status(404).render("error", {
+            res.status(404).render("error", {
                 message: "Project not found"
             });
+            return;
         }
 
         // Update member role
@@ -176,17 +233,18 @@ export async function changeRolePostController(req: Request, res: Response) {
         );
 
         if (!member) {
-            return res.status(404).render("error", {
+            res.status(404).render("error", {
                 message: "Team member not found"
             });
+            return;
         }
 
-        member.role = newRole;
+        member.role = newRole as IProjectMember['role'];
         await project.save();
 
         res.redirect('/team');
     } catch (error) {
-        console.error('Error changing team member role:', error);
+        logger.error('Error changing team member role:', error);
         res.status(500).render("error", {
             message: "An error occurred while changing team member role"
         });

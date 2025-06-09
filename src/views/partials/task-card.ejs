@@ -37,9 +37,13 @@
   
   <% if (task.assignee) { %>
     <div class="d-flex align-items-center mb-2">
-      <img src="<%= task.assignee.avatar %>" class="rounded-circle me-2" width="20" height="20" 
-           alt="<%= task.assignee.name %>" data-bs-toggle="tooltip" data-bs-placement="top" 
-           title="Assigned to <%= task.assignee.name %>">
+      <% if (task.assignee?.avatar) { %>
+        <img src="<%= task.assignee.avatar || '/img/default.jpg' %>" class="rounded-circle me-2" width="20" height="20" alt="<%= task.assignee.firstName %>">
+      <% } else { %>
+        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 20px; height: 20px;">
+          <i class="fas fa-user text-primary"></i>
+        </div>
+      <% } %>
       <small class="text-muted"><%= task.assignee.name %></small>
     </div>
   <% } %>

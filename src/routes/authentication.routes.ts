@@ -3,41 +3,40 @@ import passport from 'passport';
 import { 
     loginGetController, 
     loginPostController, 
-    logoutPostController, 
+    logoutController, 
     resetConfirmGetController, 
     resetConfirmPostController, 
     resetGetController, 
     resetPostController, 
     signupGetController, 
     signupPostController,
-    googleCallbackController,
-    twitterCallbackController
+    googleCallbackController
 } from "../controllers/authentication.controller.js";
-import { isNotAuthenticated } from "../middleware/auth.middleware.js";
-import { loginLimiter, signupLimiter, passwordResetLimiter } from "../middleware/auth.rate-limit.js";
+import { isNotAuthenticated } from "../middleware/authentication.middleware.js";
+import { authRateLimit } from "../middleware/ratelimit.middleware.js";
 
 const router = express.Router();
 
 // Regular authentication routes
 router.route("/signup")
-    .get(isNotAuthenticated, signupGetController)
-    .post(isNotAuthenticated, signupLimiter, signupPostController);
+    .get(isNotAuthenticated, authRateLimit ,signupGetController)
+    .post(isNotAuthenticated, authRateLimit, signupPostController);
 
 router.route("/login")
-    .get(isNotAuthenticated, loginGetController)
-    .post(isNotAuthenticated, loginLimiter, loginPostController);
+    .get(isNotAuthenticated, authRateLimit ,loginGetController)
+    .post(isNotAuthenticated, authRateLimit, loginPostController);
 
 router.route("/logout")
-    .post(logoutPostController);
+    .post(logoutController);
 
 // Password reset routes
 router.route("/reset")
-    .get(isNotAuthenticated, resetGetController)
-    .post(isNotAuthenticated, passwordResetLimiter, resetPostController);
+    .get(isNotAuthenticated, authRateLimit ,resetGetController)
+    .post(isNotAuthenticated, authRateLimit, resetPostController);
 
-router.route("/reset/:token")
-    .get(isNotAuthenticated, resetConfirmGetController)
-    .post(isNotAuthenticated, passwordResetLimiter, resetConfirmPostController);
+router.route("/reset/:id")
+    .get(isNotAuthenticated, authRateLimit ,resetConfirmGetController)
+    .post(isNotAuthenticated, authRateLimit, resetConfirmPostController);
 
 // OAuth routes
 router.get('/google', isNotAuthenticated, passport.authenticate('google', { 
@@ -50,13 +49,5 @@ router.get('/google/callback',
     googleCallbackController
 );
 
-// Twitter OAuth routes
-router.get('/twitter', isNotAuthenticated, passport.authenticate('twitter'));
-router.get('/twitter/callback',
-    passport.authenticate('twitter', {
-        failureRedirect: '/auth/login'
-    }),
-    twitterCallbackController
-);
 
 export default router;

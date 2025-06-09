@@ -148,6 +148,7 @@ export async function newTaskGetController(req: Request, res: Response): Promise
                 { 'members.user': userId }
             ]
         }).populate('members.user', 'firstName lastName email avatar');
+        console.log(projects);
 
         if (!projects || projects.length === 0) {
             res.status(404).render("error", {
@@ -174,22 +175,23 @@ export async function newTaskPostController(req: Request, res: Response): Promis
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).redirect("/error");
             return;
         }
+        const userIdObj = new Types.ObjectId(req.session.userId);
+        const projectId = new Types.ObjectId(req.body.project);
 
-        const projectId = new Types.ObjectId(req.params.projectId);
+        console.log(projectId);
+        console.log(userIdObj);
         const { title, description, status, priority, dueDate, assignees } = req.body;
 
         // Check if user has access to the project
         const project = await Project.findOne({
             _id: projectId,
-            $or: [
-                { createdBy: userId },
-                { 'members.user': userId }
-            ]
+            createdBy: userIdObj,
         });
 
+        console.log(project);
         if (!project) {
             res.status(404).json({ message: "Project not found or you don't have access to it" });
             return;

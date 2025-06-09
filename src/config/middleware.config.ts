@@ -4,8 +4,8 @@
 import { Application } from "express";
 import express from "express";
 import path from "path";
-import { __dirname } from "../app.js";
 import morgan from "morgan";
+import { __dirname } from "../app.js";
 import { attachUserToViews } from "../middleware/user.middleware.js";
 import methodOverride from "method-override";
 
@@ -27,7 +27,6 @@ export default function middlewareSetup(app: Application) {
     // Method override for DELETE, PUT, etc.
     app.use(methodOverride(function (req, res) {
         if (req.body && typeof req.body === 'object' && '_method' in req.body) {
-            // look in urlencoded POST bodies and delete it
             const method = req.body._method;
             delete req.body._method;
             return method;

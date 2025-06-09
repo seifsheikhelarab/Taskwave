@@ -1,5 +1,9 @@
 import { User } from '../models/user.model.js';
 import { logger } from '../config/logger.config.js';
+import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
+import { __dirname } from '../app.js';
 
 interface OAuthProfile {
     id: string;
@@ -10,7 +14,6 @@ interface OAuthProfile {
     };
     emails?: Array<{ value: string }>;
     photos?: Array<{ value: string }>;
-    username?: string;
 }
 
 class OAuthService {
@@ -20,24 +23,35 @@ class OAuthService {
         }
     }
 
-    async findOrCreateUser(profile: OAuthProfile, provider: 'google' | 'twitter') {
+    async downloadAndSaveAvatar(url: string, filename: string): Promise<string | null> {
         try {
-            // Check if user already exists with OAuth provider
-            let user = await User.findOne({ 
+            const avatarDir = path.join(__dirname, 'public', 'avatars');
+            const avatarPath = path.join(avatarDir, filename);
+
+            fs.mkdirSync(avatarDir, { recursive: true });
+            const response = await axios.get(url, { responseType: 'arraybuffer' });
+            fs.writeFileSync(avatarPath, Buffer.from(response.data as Buffer));
+
+            return `/avatars/${filename}`;
+        } catch (error) {
+            logger.error('Failed to download avatar:', error);
+            return null;
+        }
+    }
+
+    async findOrCreateUser(profile: OAuthProfile, provider: 'google') {
+        try {
+            let user = await User.findOne({
                 oauthProvider: provider,
-                oauthId: profile.id 
+                oauthId: profile.id
             });
 
-            if (user) {
-                return user;
-            }
+            if (user) return user;
 
-            // For Google, check if user exists with same email
-            if (provider === 'google' && profile.emails?.[0]?.value) {
+            if (profile.emails?.[0]?.value) {
                 user = await User.findOne({ email: profile.emails[0].value });
 
                 if (user) {
-                    // Link OAuth account to existing user
                     user.oauthProvider = provider;
                     user.oauthId = profile.id;
                     await user.save();
@@ -45,23 +59,22 @@ class OAuthService {
                 }
             }
 
-            // Create new user
-            const userData: any = {
+            let avatar = null;
+            const avatarUrl = profile.photos?.[0]?.value;
+            if (avatarUrl) {
+                const filename = `${profile.id}-avatar.jpg`;
+                avatar = await this.downloadAndSaveAvatar(avatarUrl, filename);
+            }
+
+            const userData = {
                 oauthProvider: provider,
                 oauthId: profile.id,
-                avatar: profile.photos?.[0]?.value
+                avatar,
+                firstName: profile.name?.givenName || '',
+                lastName: profile.name?.familyName || '',
+                email: profile.emails![0].value,
+                isEmailVerified: true
             };
-
-            if (provider === 'google') {
-                userData.firstName = profile.name?.givenName || '';
-                userData.lastName = profile.name?.familyName || '';
-                userData.email = profile.emails![0].value;
-            } else if (provider === 'twitter') {
-                const nameParts = profile.displayName.split(' ');
-                userData.firstName = nameParts[0] || '';
-                userData.lastName = nameParts.slice(1).join(' ') || '';
-                userData.email = `${profile.username}@twitter.com`; // Twitter doesn't provide email
-            }
 
             user = await User.create(userData);
             return user;
@@ -72,4 +85,4 @@ class OAuthService {
     }
 }
 
-export const oauthService = new OAuthService(); 
+export const oauthService = new OAuthService();

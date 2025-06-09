@@ -9,9 +9,9 @@ export default function sessionSetup(app: Application) {
     const store = MongoStore.create({
         mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/taskwave',
         collectionName: 'sessions',
-        ttl: 14 * 24 * 60 * 60, // 14 days
-        autoRemove: 'native', // Use MongoDB's TTL index
-        touchAfter: 24 * 3600 // Only update session if it's been more than 24 hours
+        ttl: 14 * 24 * 60 * 60,
+        autoRemove: 'native',
+        touchAfter: 24 * 3600
     });
 
     // Monitor session store
@@ -38,7 +38,6 @@ export default function sessionSetup(app: Application) {
         rolling: true
     }));
 
-    // Add error handling for session store
     app.use((err: any, req: any, res: any, next: any) => {
         if (err.code === 'ECONNREFUSED') {
             logger.error('Session store connection failed');

@@ -1,0 +1,78 @@
+<%- include('../partials/header', {title: 'Set New Password | TaskWave'}); %>
+
+<main class="bg-light">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4 p-sm-5">
+            <div class="text-center mb-4">
+              <h2 class="fw-bold">Set New Password</h2>
+              <p class="text-muted">Please enter your new password below</p>
+            </div>
+
+            <% if (typeof error !== 'undefined') { %>
+              <div class="alert alert-danger">
+                <%= error %>
+              </div>
+            <% } %>
+
+            <form action="/auth/reset/<%= userId %>" method="POST">
+              <div class="mb-4">
+                <div class="form-floating">
+                  <input 
+                    type="password" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'password') ? 'is-invalid' : '' %>" 
+                    id="password" 
+                    name="password" 
+                    placeholder="New Password" 
+                    required
+                  >
+                  <label for="password">New Password</label>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const passwordError = errors.find(e => e.param === 'password'); %>
+                    <% if (passwordError) { %>
+                      <div class="invalid-feedback">
+                        <%= passwordError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <div class="form-floating">
+                  <input 
+                    type="password" 
+                    class="form-control <%= typeof errors !== 'undefined' && errors.find(e => e.param === 'confirmPassword') ? 'is-invalid' : '' %>" 
+                    id="confirmPassword" 
+                    name="confirmPassword" 
+                    placeholder="Confirm New Password" 
+                    required
+                  >
+                  <label for="confirmPassword">Confirm New Password</label>
+                  <% if (typeof errors !== 'undefined') { %>
+                    <% const confirmPasswordError = errors.find(e => e.param === 'confirmPassword'); %>
+                    <% if (confirmPasswordError) { %>
+                      <div class="invalid-feedback">
+                        <%= confirmPasswordError.msg %>
+                      </div>
+                    <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100 py-3">Reset Password</button>
+            </form>
+
+            <div class="text-center mt-4">
+              <p class="mb-0">Remember your password? <a href="/auth/login">Log in</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer'); %>

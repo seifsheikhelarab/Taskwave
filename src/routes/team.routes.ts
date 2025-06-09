@@ -5,7 +5,7 @@ import {
     removeTeamMemberPostController,
     changeRolePostController
 } from "../controllers/team.controller.js";
-import { isAuthenticated } from "../middleware/auth.middleware.js";
+import { isAuthenticated } from "../middleware/authentication.middleware.js";
 
 const router = express.Router();
 

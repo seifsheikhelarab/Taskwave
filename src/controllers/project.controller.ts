@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
-import Project, { IProjectMember } from "../models/project.model.js";
+import Project from "../models/project.model.js";
 import Task from "../models/task.model.js";
-import User, { IUser } from "../models/user.model.js";
 import { Types } from "mongoose";
 import Invitation from '../models/invitation.model.js';
 import crypto from 'crypto';
 import { emailService } from '../services/email.service.js';
+import { logger } from "../config/logger.config.js";
+import User from "../models/user.model.js";
 
 // Type guard function
 function isProjectNotNull(project: any): project is NonNullable<typeof project> {
@@ -249,11 +250,11 @@ export async function editProjectPutController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.status(401).json({ message: 'Unauthorized' });
+            res.redirect("/error");
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
-        const { name, description, status, visibility } = req.body;
+        const { name, description, status } = req.body;
 
         const project = await Project.findOne({
             _id: projectId,
@@ -264,20 +265,27 @@ export async function editProjectPutController(req: Request, res: Response) {
         });
 
         if (!isProjectNotNull(project)) {
-            res.status(404).json({ message: "Project not found or you don't have permission to update it" });
+            res.render("project/edit", {
+            project,
+            errors: ["Project not found or you don't have permission to update it"],
+            oldInput: {}
+        });
         }
 
         // Update project
         project!.name = name;
         project!.description = description;
         project!.status = status;
-        project!.visibility = visibility;
         await project!.save();
 
-        res.json({ message: 'Project updated successfully' });
+        res.redirect(`/projects/${projectId}`);
+
     } catch (error) {
-        console.error('Error updating project:', error);
-        res.status(500).json({ message: 'An error occurred while updating the project' });
+        logger.error('Error updating project:', error);
+        res.render("project/edit", {
+            errors: ["An error occurred while updating the project"],
+            oldInput: {}
+        });
     }
 }
 
@@ -324,6 +332,7 @@ export async function inviteProjectGetController(req: Request, res: Response) {
         const userId = req.session.userId;
         if (!userId) {
             res.redirect('/auth/login');
+            return;
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
@@ -333,12 +342,13 @@ export async function inviteProjectGetController(req: Request, res: Response) {
                 { createdBy: userId },
                 { 'members.user': userId, 'members.role': { $in: ['owner', 'admin'] } }
             ]
-        });
+        }).populate('members.user', 'firstName lastName email avatar');
 
         if (!project) {
             res.status(404).render("error", {
                 message: "Project not found or you don't have permission to invite members"
             });
+            return;
         }
 
         res.render("project/invite", {
@@ -359,11 +369,33 @@ export async function inviteProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            return res.redirect('/auth/login');
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
         const { email, role } = req.body;
+
+        // Validate input
+        const errors = [];
+        if (!email) {
+            errors.push({ msg: 'Email is required' });
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            errors.push({ msg: 'Please enter a valid email address' });
+        }
+        if (!role) {
+            errors.push({ msg: 'Role is required' });
+        } else if (!['member', 'admin'].includes(role)) {
+            errors.push({ msg: 'Invalid role selected' });
+        }
+
+        if (errors.length > 0) {
+            const project = await Project.findById(projectId).populate('members.user', 'firstName lastName email avatar');
+            return res.render("project/invite", {
+                project,
+                errors,
+                oldInput: req.body
+            });
+        }
 
         const project = await Project.findOne({
             _id: projectId,
@@ -374,13 +406,20 @@ export async function inviteProjectPostController(req: Request, res: Response) {
         });
 
         if (!project) {
-            return res.status(404).json({ message: "Project not found or you don't have permission to invite members" });
+            return res.status(404).render("error", {
+                message: "Project not found or you don't have permission to invite members"
+            });
         }
 
         // Check if user is already a member
         const userDoc = await User.findOne({ email });
         if (userDoc && project.members.some(m => m.user.toString() === userDoc._id.toString())) {
-            return res.status(400).json({ message: "User is already a member of this project" });
+            const project = await Project.findById(projectId).populate('members.user', 'firstName lastName email avatar');
+            return res.render("project/invite", {
+                project,
+                errors: [{ msg: "User is already a member of this project" }],
+                oldInput: req.body
+            });
         }
 
         // Create invitation
@@ -401,10 +440,22 @@ export async function inviteProjectPostController(req: Request, res: Response) {
             await emailService.sendProjectInvitationEmail(email, project, inviter, joinLink);
         }
 
-        return res.json({ message: 'Invitation sent successfully', joinLink });
+        // Redirect back to invite page with success message
+        const projectWithMembers = await Project.findById(projectId).populate('members.user', 'firstName lastName email avatar');
+        res.render("project/invite", {
+            project: projectWithMembers,
+            success: "Invitation sent successfully",
+            errors: [],
+            oldInput: {}
+        });
     } catch (error) {
         console.error('Error sending invitation:', error);
-        res.status(500).json({ message: 'An error occurred while sending the invitation' });
+        const project = await Project.findById(req.params.projectId).populate('members.user', 'firstName lastName email avatar');
+        res.render("project/invite", {
+            project,
+            errors: [{ msg: 'An error occurred while sending the invitation' }],
+            oldInput: req.body
+        });
     }
 }
 
@@ -428,25 +479,25 @@ export async function joinProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
+            res.status(401).json({ message: 'Unauthorized' });
         }
         const { projectId, token } = req.params;
         const invitation = await Invitation.findOne({ project: projectId, token, status: 'pending', expiresAt: { $gt: new Date() } });
         if (!invitation) {
-            return res.status(400).render('error', { message: 'Invalid or expired invitation link.' });
+            res.status(400).render('error', { message: 'Invalid or expired invitation link.' });
         }
         // Add user to project
         const project = await Project.findById(projectId);
         if (!project) {
-            return res.status(404).render('error', { message: 'Project not found.' });
+            res.status(404).render('error', { message: 'Project not found.' });
         }
-        if (project.members.some(m => m.user.toString() === userId)) {
-            return res.status(400).render('error', { message: 'You are already a member of this project.' });
+        if (project!.members.some(m => m.user.toString() === userId)) {
+            res.status(400).render('error', { message: 'You are already a member of this project.' });
         }
-        project.members.push({ user: new Types.ObjectId(userId), role: invitation.role, joinedAt: new Date() });
-        await project.save();
-        invitation.status = 'accepted';
-        await invitation.save();
+        project!.members.push({ user: new Types.ObjectId(userId), role: invitation!.role, joinedAt: new Date() });
+        await project!.save();
+        invitation!.status = 'accepted';
+        await invitation!.save();
         res.redirect(`/projects/${projectId}`);
     } catch (error) {
         console.error('Error joining project:', error);

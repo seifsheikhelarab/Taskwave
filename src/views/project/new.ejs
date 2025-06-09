@@ -117,39 +117,6 @@
                     <% } %>
                   </div>
                 </div>
-
-                <!-- Project Visibility -->
-                <div class="col-md-12">
-                  <label class="form-label">Project Visibility</label>
-                  <div class="form-check">
-                    <input 
-                      class="form-check-input" 
-                      type="radio" 
-                      name="visibility" 
-                      id="visibilityPublic" 
-                      value="public"
-                      <%= typeof oldInput !== 'undefined' && oldInput.visibility === 'public' ? 'checked' : '' %>
-                      <%= typeof oldInput === 'undefined' ? 'checked' : '' %>
-                    >
-                    <label class="form-check-label" for="visibilityPublic">
-                      <i class="fas fa-globe me-1"></i> Public (Visible to all team members)
-                    </label>
-                  </div>
-                  <div class="form-check">
-                    <input 
-                      class="form-check-input" 
-                      type="radio" 
-                      name="visibility" 
-                      id="visibilityPrivate" 
-                      value="private"
-                      <%= typeof oldInput !== 'undefined' && oldInput.visibility === 'private' ? 'checked' : '' %>
-                    >
-                    <label class="form-check-label" for="visibilityPrivate">
-                      <i class="fas fa-lock me-1"></i> Private (Only visible to selected members)
-                    </label>
-                  </div>
-                </div>
-
                 <!-- Submit Button -->
                 <div class="col-12 mt-4">
                   <button type="submit" class="btn btn-primary w-100 py-3">

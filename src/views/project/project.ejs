@@ -132,11 +132,11 @@
                 <% project.tasks.forEach(task => { %>
                   <div class="list-group-item">
                     <div class="d-flex align-items-center">
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" <%= task.isComplete ? 'checked' : '' %>>
-                      </div>
+                        <h5>
+                          <%= task.isComplete ? '✅' : '⏳' %>
+                        </h5>
                       <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1"><%= task.title %></h6>
+                        <h6 class="mb-1"><a href="/tasks/<%= task.id %>"><%= task.title %></a></h6>
                         <p class="text-muted small mb-0"><%= task.description %></p>
                       </div>
                       <div class="ms-3">
@@ -179,7 +179,7 @@
                 <div class="list-group-item">
                   <div class="d-flex align-items-center">
                     <% if (member.user.avatar) { %>
-                      <img src="<%= member.user.avatar %>" class="rounded-circle me-3" width="40" height="40" alt="<%= member.user.firstName %>">
+                      <img src="<%= member.user.avatar || '/img/default.jpg' %>" class="rounded-circle me-3" width="40" height="40" alt="<%= member.user.firstName %>">
                     <% } else { %>
                       <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
                         <i class="fas fa-user text-primary"></i>

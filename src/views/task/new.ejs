@@ -17,7 +17,7 @@
                                 <option value="">Select a project</option>
                                 <% projects.forEach(project => { %>
                                     <option value="<%= project._id %>">
-                                        <%= project.name %>
+                                        <%= project.name %> - <%= project._id %>
                                     </option>
                                 <% }); %>
                             </select>
@@ -45,7 +45,7 @@
 
                             <div class="col-md-6 mb-3">
                                 <label for="dueDate" class="form-label">Due Date</label>
-                                <input type="datetime-local" class="form-control" id="dueDate" name="dueDate">
+                                <input type="date" class="form-control" id="dueDate" name="dueDate">
                             </div>
                         </div>
 

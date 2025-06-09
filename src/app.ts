@@ -11,7 +11,6 @@ import middlewareSetup from "./config/middleware.config.js";
 import sessionSetup from "./config/session.config.js";
 import { configurePassport } from "./config/passport.config.js";
 import { logger } from "./config/logger.config.js";
-import authenticationRoutes from './routes/authentication.routes.js';
 
 const app = express();
 
@@ -33,7 +32,6 @@ app.use(passport.session());
 middlewareSetup(app);
 
 // Routes
-app.use('/auth', authenticationRoutes);
 app.use(router);
 
 // Start server

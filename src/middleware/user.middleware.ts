@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import User from "../models/user.model.js";
+import { logger } from "../config/logger.config.js";
 
 export async function attachUserToViews(req: Request, res: Response, next: NextFunction) {
     try {
         if (!req.session) {
-            console.warn('Session is not initialized');
+            logger.warn('Session is not initialized');
             res.locals.user = null;
             return next();
         }
@@ -18,7 +19,7 @@ export async function attachUserToViews(req: Request, res: Response, next: NextF
         }
         next();
     } catch (error) {
-        console.error('Error attaching user to views:', error);
+        logger.error('Error attaching user to views:', error);
         res.locals.user = null;
         next();
     }

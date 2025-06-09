@@ -21,7 +21,8 @@
               </div>
             <% } %>
 
-            <form action="/projects/<%= project._id %>/edit" method="POST">
+            <form action="/projects/<%= project._id %>/edit" method="POST" enctype="application/x-www-form-urlencoded">
+              <input type="hidden" name="_method" value="PUT">
               <div class="mb-3">
                 <div class="form-floating">
                   <input 
@@ -74,10 +75,10 @@
                     name="status"
                     required
                   >
-                    <option value="planning" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'planning' ? 'selected' : '' %>>Planning</option>
-                    <option value="in-progress" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'in-progress' ? 'selected' : '' %>>In Progress</option>
+                    <option value="active" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="on-hold" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'on-hold' ? 'selected' : '' %>>On-Hold</option>
                     <option value="completed" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'completed' ? 'selected' : '' %>>Completed</option>
-                    <option value="on-hold" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'on-hold' ? 'selected' : '' %>>On Hold</option>
+                    <option value="archived" <%= (typeof oldInput !== 'undefined' ? oldInput.status : project.status) === 'archived' ? 'selected' : '' %>>Archived</option>
                   </select>
                   <label for="status">Project Status</label>
                   <% if (typeof errors !== 'undefined') { %>

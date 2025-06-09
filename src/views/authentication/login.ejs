@@ -70,25 +70,13 @@
               </div>
 
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="form-check">
-                  <input 
-                    class="form-check-input" 
-                    type="checkbox" 
-                    id="remember" 
-                    name="remember"
-                    <%= typeof oldInput !== 'undefined' && oldInput.remember === 'on' ? 'checked' : '' %>
-                  >
-                  <label class="form-check-label" for="remember">
-                    Remember me
-                  </label>
-                </div>
-                <a href="/forgot-password" class="text-decoration-none">Forgot password?</a>
+                <a href="/auth/reset" class="text-decoration-none">Forgot password?</a>
               </div>
 
               <button type="submit" class="btn btn-primary w-100 py-3 mb-3">Log In</button>
 
               <div class="text-center mt-3">
-                <p class="mb-0">Don't have an account? <a href="/register" class="text-decoration-none">Sign up</a></p>
+                <p class="mb-0">Don't have an account? <a href="/auth/signup" class="text-decoration-none">Sign up</a></p>
               </div>
 
               <div class="d-flex align-items-center my-4">
@@ -97,15 +85,10 @@
                 <hr class="flex-grow-1">
               </div>
 
-              <div class="row g-2">
-                <div class="col-md-6">
+              <div class="row justify-content-center">
+                <div class="col-md-8">
                   <a href="/auth/google" class="btn btn-outline-danger w-100">
                     <i class="fab fa-google me-2"></i> Continue with Google
-                  </a>
-                </div>
-                <div class="col-md-6">
-                  <a href="/auth/twitter" class="btn btn-outline-dark w-100">
-                    <i class="fab fa-twitter me-2"></i> Continue with Twitter
                   </a>
                 </div>
               </div>

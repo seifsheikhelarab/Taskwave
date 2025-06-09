@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import Project from "../models/project.model.js";
-import { Types } from "mongoose";
 
 // Get all boards (projects) for the current user
 export async function boardsGetController(req: Request, res: Response) {

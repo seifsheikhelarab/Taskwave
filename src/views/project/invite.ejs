@@ -1,0 +1,95 @@
+<%- include('../partials/header', {title: 'Invite Team Members | TaskWave'}); %>
+
+<main class="py-4">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <h1 class="h4 mb-0">Invite Team Members</h1>
+              <a href="/projects/<%= project._id %>" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-2"></i>Back to Project
+              </a>
+            </div>
+          </div>
+          <div class="card-body p-4">
+            <% if (typeof success !== 'undefined' && success) { %>
+              <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= success %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            <% } %>
+
+            <% if (errors && errors.length > 0) { %>
+              <div class="alert alert-danger">
+                <ul class="mb-0">
+                  <% errors.forEach(function(error) { %>
+                    <li><%= error.msg %></li>
+                  <% }); %>
+                </ul>
+              </div>
+            <% } %>
+
+            <form method="POST" action="/projects/<%= project._id %>/invite">
+              <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" required
+                  value="<%= typeof oldInput !== 'undefined' ? oldInput.email : '' %>">
+                <div class="form-text">Enter the email address of the person you want to invite.</div>
+              </div>
+
+              <div class="mb-4">
+                <label for="role" class="form-label">Role</label>
+                <select class="form-select" id="role" name="role" required>
+                  <option value="member" <%= typeof oldInput !== 'undefined' && oldInput.role === 'member' ? 'selected' : '' %>>Member</option>
+                  <option value="admin" <%= typeof oldInput !== 'undefined' && oldInput.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                </select>
+                <div class="form-text">
+                  <strong>Member:</strong> Can view and update tasks<br>
+                  <strong>Admin:</strong> Can manage tasks and team members
+                </div>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-paper-plane me-2"></i>Send Invitation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Current Team Members -->
+        <div class="card border-0 shadow-sm mt-4">
+          <div class="card-header bg-white border-0 py-3">
+            <h2 class="h5 mb-0">Current Team Members</h2>
+          </div>
+          <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+              <% project.members.forEach(member => { %>
+                <div class="list-group-item">
+                  <div class="d-flex align-items-center">
+                    <% if (member.user.avatar) { %>
+                      <img src="<%= member.user.avatar || '/img/default.jpg' %>" class="rounded-circle me-3" width="40" height="40" alt="<%= member.user.firstName %>">
+                    <% } else { %>
+                      <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-user text-primary"></i>
+                      </div>
+                    <% } %>
+                    <div class="flex-grow-1">
+                      <h6 class="mb-0"><%= member.user.firstName %> <%= member.user.lastName %></h6>
+                      <small class="text-muted"><%= member.role %></small>
+                    </div>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer'); %>

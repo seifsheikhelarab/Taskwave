@@ -53,15 +53,6 @@ const invitationSchema = new Schema<IInvitation>({
     timestamps: true
 });
 
-// Generate invitation token
-invitationSchema.pre('save', function(next) {
-    if (!this.token) {
-        this.token = crypto.randomBytes(32).toString('hex');
-    }
-    next();
-});
-
-// Indexes
 invitationSchema.index({ token: 1 });
 invitationSchema.index({ email: 1, project: 1 }, { unique: true });
 invitationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

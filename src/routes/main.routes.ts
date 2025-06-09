@@ -1,6 +1,6 @@
 import express from "express";
-import { isAuthenticated } from "../middleware/auth.middleware.js";
-import { indexController } from "../controllers/main.controller.js";
+import { isAuthenticated } from "../middleware/authentication.middleware.js";
+import { errorController, indexController } from "../controllers/main.controller.js";
 
 import authenticationRouter from "./authentication.routes.js";
 import projectRouter from "./project.routes.js";
@@ -24,12 +24,4 @@ router.use("/user", isAuthenticated, userRouter);
 router.get("/me", isAuthenticated, (req, res) => res.redirect("/users/profile"));
 router.get("/settings", isAuthenticated, (req, res) => res.redirect("/users/settings"));
 
-// Catch-all route for 404
-router.use((req, res) => {
-    res.status(404).render("error", {
-        message: "Page not found",
-        error: {
-            status: 404
-        }
-    });
-});
+router.use(errorController);

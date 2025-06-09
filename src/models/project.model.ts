@@ -24,7 +24,6 @@ export interface IProject extends Document {
     name: string;
     description?: string;
     status: 'active' | 'on-hold' | 'completed' | 'archived';
-    visibility: 'public' | 'private';
     startDate?: Date;
     dueDate?: Date;
     createdBy: PopulatedDoc<IUser, Types.ObjectId>;
@@ -55,11 +54,6 @@ status: {
     type: String,
     enum: ['active', 'on-hold', 'completed', 'archived'],
     default: 'active'
-},
-visibility: {
-    type: String,
-    enum: ['public', 'private'],
-    default: 'public'
 },
 startDate: Date,
 dueDate: Date,

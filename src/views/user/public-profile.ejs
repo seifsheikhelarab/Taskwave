@@ -9,7 +9,7 @@
           <div class="card-body text-center">
             <div class="mb-4">
               <% if (user.avatar) { %>
-                <img src="<%= user.avatar %>" alt="<%= user.firstName %>" class="rounded-circle mb-3" width="120" height="120">
+                <img src="<%= user.avatar || '/img/default.jpg' %>" alt="<%= user.firstName %>" class="rounded-circle mb-3" width="120" height="120">
               <% } else { %>
                 <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px;">
                   <i class="fas fa-user fa-3x text-primary"></i>

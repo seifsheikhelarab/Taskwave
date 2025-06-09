@@ -1,8 +1,9 @@
-import express, { Request, Response } from "express";
-import User, { IUser } from "../models/user.model.js";
-import crypto from 'crypto';
-import { Types } from 'mongoose';
+import { Request, Response } from 'express';
+import User, { IUser } from '../models/user.model.js';
+import { emailService } from '../services/email.service.js';
 import { logger } from '../config/logger.config.js';
+import { Types } from 'mongoose';
+import { emailTemplates } from '../config/mail.config.js';
 
 // Extend Express Session interface
 declare module 'express-session' {
@@ -12,14 +13,15 @@ declare module 'express-session' {
     }
 }
 
-export function signupGetController(req: Request, res: Response) {
+// Signup
+export const signupGetController = (req: Request, res: Response) => {
     res.render("authentication/signup", {
         errors: [],
         oldInput: {}
     });
-}
+};
 
-export async function signupPostController(req: Request, res: Response) {
+export const signupPostController = async (req: Request, res: Response) => {
     try {
         const { firstName, lastName, email, password } = req.body;
 
@@ -51,16 +53,17 @@ export async function signupPostController(req: Request, res: Response) {
             oldInput: req.body
         });
     }
-}
+};
 
-export function loginGetController(req: Request, res: Response) {
+// Login
+export const loginGetController = (req: Request, res: Response) => {
     res.render("authentication/login", {
         errors: [],
         oldInput: {}
     });
-}
+};
 
-export async function loginPostController(req: Request, res: Response) {
+export const loginPostController = async (req: Request, res: Response) => {
     try {
         const { email, password, remember } = req.body;
 
@@ -87,145 +90,123 @@ export async function loginPostController(req: Request, res: Response) {
             oldInput: req.body
         });
     }
-}
+};
 
-export function logoutPostController(req: Request, res: Response) {
+// Logout
+export const logoutController = (req: Request, res: Response) => {
     req.session.destroy((err) => {
         if (err) {
             console.error('Logout error:', err);
         }
         res.redirect('/');
     });
-}
+};
 
-export function resetGetController(req: Request, res: Response) {
+// Password Reset
+export const resetGetController = (req: Request, res: Response) => {
     res.render("authentication/reset", {
         errors: [],
         oldInput: {}
     });
-}
+};
 
-export async function resetPostController(req: Request, res: Response) {
+export const resetPostController = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
+
+        // Find user by email
         const user = await User.findOne({ email });
-
         if (!user) {
-            // Don't reveal that the email doesn't exist
-            return res.render("authentication/reset-confirm", {
-                message: 'If an account exists with that email, you will receive a password reset link.'
+            // Don't reveal if email exists or not
+            return res.render('authentication/reset', {
+                success: 'If an account exists with this email, you will receive a password reset link.'
             });
         }
 
-        // Generate reset token
-        const resetToken = user.createPasswordResetToken();
-        await user.save({ validateBeforeSave: false });
+        // Send reset email
+        const resetUrl = `${process.env.APP_URL}/auth/reset/${user._id}`;
+        await emailService.sendEmail(
+            user.email,
+            emailTemplates.passwordReset(resetUrl).subject,
+            emailTemplates.passwordReset(resetUrl).html,
+        );
 
-        // TODO: Send reset email
-        // For now, just show the token in development
-        const resetURL = `${req.protocol}://${req.get('host')}/auth/reset/${resetToken}`;
-        console.log('Reset URL:', resetURL);
-
-        res.render("authentication/reset-confirm", {
-            message: 'If an account exists with that email, you will receive a password reset link.'
+        res.render('authentication/reset', {
+            success: 'If an account exists with this email, you will receive a password reset link.'
         });
     } catch (error) {
-        console.error('Password reset error:', error);
-        res.render("authentication/reset", {
-            errors: [{ msg: 'An error occurred while processing your request' }],
-            oldInput: req.body
+        console.error('Password reset request error:', error);
+        res.render('authentication/reset', {
+            error: 'An error occurred. Please try again.'
         });
     }
-}
+};
 
-export async function resetConfirmGetController(req: Request, res: Response) {
+export const resetConfirmGetController = async (req: Request, res: Response) => {
     try {
-        const { token } = req.params;
-        const hashedToken = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
-
-        const user = await User.findOne({
-            passwordResetToken: hashedToken,
-            passwordResetExpires: { $gt: Date.now() }
-        });
-
+        const { id } = req.params;
+        const user = await User.findById(id);
+        
         if (!user) {
-            return res.render("authentication/reset-confirm", {
-                message: 'Password reset token is invalid or has expired'
+            return res.render('authentication/reset', {
+                error: 'Invalid or expired reset link.'
             });
         }
 
-        res.render("authentication/reset-password", {
-            token,
-            errors: [],
-            oldInput: {}
-        });
+        res.render('authentication/reset-confirm', { userId: id });
     } catch (error) {
-        console.error('Reset confirm error:', error);
-        res.render("authentication/reset-confirm", {
-            message: 'An error occurred while processing your request'
+        console.error('Show reset form error:', error);
+        res.render('authentication/reset', {
+            error: 'An error occurred. Please try again.'
         });
     }
-}
+};
 
-export async function resetConfirmPostController(req: Request, res: Response) {
+export const resetConfirmPostController = async (req: Request, res: Response) => {
     try {
-        const { token } = req.params;
-        const { password, passwordConfirm } = req.body;
+        const { id } = req.params;
+        const { password, confirmPassword } = req.body;
 
-        if (password !== passwordConfirm) {
-            return res.render("authentication/reset-password", {
-                token,
-                errors: [{ msg: 'Passwords do not match' }],
-                oldInput: req.body
+        // Validate passwords match
+        if (password !== confirmPassword) {
+            return res.render('authentication/reset-confirm', {
+                userId: id,
+                errors: [{ param: 'confirmPassword', msg: 'Passwords do not match' }]
             });
         }
 
-        const hashedToken = crypto
-            .createHash('sha256')
-            .update(token)
-            .digest('hex');
-
-        const user = await User.findOne({
-            passwordResetToken: hashedToken,
-            passwordResetExpires: { $gt: Date.now() }
-        });
-
+        // Find user
+        const user = await User.findById(id);
         if (!user) {
-            return res.render("authentication/reset-confirm", {
-                message: 'Password reset token is invalid or has expired'
+            return res.render('authentication/reset', {
+                error: 'Invalid or expired reset link.'
             });
         }
 
         // Update password
         user.password = password;
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
         await user.save();
 
-        // Log user in
-        req.session.userId = (user._id as Types.ObjectId).toString();
+        // Send confirmation email
+        await emailService.sendEmail(
+            user.email,
+            emailTemplates.passwordResetConfirm().subject,
+            emailTemplates.passwordResetConfirm().html
+            
+        );
 
-        res.redirect('/user/profile');
+        res.redirect('/auth/login?success=Password has been reset successfully');
     } catch (error) {
         console.error('Reset password error:', error);
-        res.render("authentication/reset-password", {
-            token: req.params.token,
-            errors: [{ msg: 'An error occurred while resetting your password' }],
-            oldInput: req.body
+        res.render('authentication/reset-confirm', {
+            userId: req.params.id,
+            error: 'An error occurred. Please try again.'
         });
     }
-}
+};
 
-export function googleGetController(req: Request, res: Response) {
-    // Google OAuth callback - user is already authenticated by passport
-    res.redirect('/me');
-}
-
-// OAuth Controllers
-export async function googleCallbackController(req: Request, res: Response) {
+// Google OAuth
+export const googleCallbackController = async (req: Request, res: Response) => {
     try {
         if (!req.user) {
             throw new Error('No user data from Google');
@@ -242,23 +223,4 @@ export async function googleCallbackController(req: Request, res: Response) {
             message: "An error occurred during Google authentication"
         });
     }
-}
-
-export async function twitterCallbackController(req: Request, res: Response) {
-    try {
-        if (!req.user) {
-            throw new Error('No user data from Twitter');
-        }
-
-        const user = req.user as IUser;
-        req.session.userId = user._id.toString();
-        req.session.isAuthenticated = true;
-
-        res.redirect('/projects');
-    } catch (error) {
-        logger.error('Twitter OAuth error:', error);
-        res.status(500).render("error", {
-            message: "An error occurred during Twitter authentication"
-        });
-    }
-}
+}; 

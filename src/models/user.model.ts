@@ -1,6 +1,5 @@
 import mongoose, { Document, Model, Schema, Types } from 'mongoose';
 import bcrypt from 'bcrypt';
-import crypto from 'crypto';
 
 export interface IUser extends Document {
     _id: Types.ObjectId;
@@ -9,12 +8,10 @@ export interface IUser extends Document {
     email: string;
     password?: string;
     passwordChangedAt?: Date;
-    passwordResetToken?: string;
-    passwordResetExpires?: Date;
     role: 'admin' | 'member' | 'guest';
     avatar: string;
     isActive: boolean;
-    oauthProvider?: 'google' | 'twitter' | 'github' | null;
+    oauthProvider?: 'google' | null;
     oauthId?: string;
     lastActive?: Date;
     createdAt: Date;
@@ -24,7 +21,6 @@ export interface IUser extends Document {
 
     correctPassword(candidatePassword: string): Promise<boolean>;
     changedPasswordAfter(JWTTimestamp: number): boolean;
-    createPasswordResetToken(): string;
 }
 
 export interface IUserModel extends Model<IUser> {
@@ -58,8 +54,6 @@ const userSchema = new Schema<IUser, IUserModel>({
         select: false
     },
     passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
     role: {
         type: String,
         enum: ['admin', 'member', 'guest'],
@@ -67,7 +61,7 @@ const userSchema = new Schema<IUser, IUserModel>({
     },
     avatar: {
         type: String,
-        default: 'default.jpg'
+        default: '/img/default.jpg'
     },
     isActive: {
         type: Boolean,
@@ -76,7 +70,7 @@ const userSchema = new Schema<IUser, IUserModel>({
     },
     oauthProvider: {
         type: String,
-        enum: ['google', 'twitter', 'github', null],
+        enum: ['google', null],
         default: null
     },
     oauthId: String,
@@ -110,9 +104,9 @@ userSchema.methods.correctPassword = async function(
     this: IUser,
     candidatePassword: string
 ): Promise<boolean> {
-if (!this.password) {
-    return false;
-}
+    if (!this.password) {
+        return false;
+    }
     return bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -121,22 +115,10 @@ userSchema.methods.changedPasswordAfter = function(
     JWTTimestamp: number
 ): boolean {
     if (this.passwordChangedAt) {
-    const changedTimestamp = Math.floor(this.passwordChangedAt.getTime() / 1000);
-    return JWTTimestamp < changedTimestamp;
-}
+        const changedTimestamp = Math.floor(this.passwordChangedAt.getTime() / 1000);
+        return JWTTimestamp < changedTimestamp;
+    }
     return false;
-};
-
-userSchema.methods.createPasswordResetToken = function(this: IUser): string {
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    this.passwordResetToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-
-  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
-
-    return resetToken;
 };
 
 export const User = mongoose.model<IUser, IUserModel>('User', userSchema);

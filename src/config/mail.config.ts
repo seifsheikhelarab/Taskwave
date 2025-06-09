@@ -1,39 +1,11 @@
-//Configuration for sending mail using Nodemailer
+// mail.config.ts
 
-import dotenv from "dotenv";
-dotenv.config();
+import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
-import { __dirname } from '../app.js';
-import ejs from 'ejs';
-import { logger } from './logger.config.js';
 
-export const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    port: Number(process.env.MAIL_PORT),
-    secure: false,
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-    },
-} as SMTPTransport.Options);
+dotenv.config();
 
-export function sendEmail(receiver:String, id:String){
-    ejs.renderFile(__dirname + "/views/email.ejs",{id},(err,data)=>{
-        if(err){console.error(err);
-        }else{
-
-            transporter.sendMail({
-                from: `"FromName" <${process.env.MAIL_FROM}>`,
-                to: receiver.toString(),
-                subject: "Subject",
-                html: data,
-            },(err,info)=>{
-                if(err){console.error(err)}
-            })
-        }
-    })
-}
 
 interface MailConfig {
     host: string;
@@ -46,23 +18,6 @@ interface MailConfig {
     from: string;
 }
 
-const requiredEnvVars = [
-    'SMTP_HOST',
-    'SMTP_PORT',
-    'SMTP_USER',
-    'SMTP_PASS',
-    'SMTP_FROM',
-    'APP_URL'
-] as const;
-
-for (const envVar of requiredEnvVars) {
-    if (!process.env[envVar]) {
-        logger.error(`Missing required environment variable: ${envVar}`);
-        throw new Error(`Missing required environment variable: ${envVar}`);
-    }
-}
-
-// Type assertion for environment variables
 const env = {
     SMTP_HOST: process.env.SMTP_HOST!,
     SMTP_PORT: parseInt(process.env.SMTP_PORT!),
@@ -84,7 +39,8 @@ export const mailConfig: MailConfig = {
     from: env.SMTP_FROM
 };
 
-// Email templates
+export const transporter = nodemailer.createTransport(mailConfig as SMTPTransport.Options);
+
 export const emailTemplates = {
     welcome: (firstName: string) => ({
         subject: 'Welcome to TaskWave!',
@@ -92,12 +48,6 @@ export const emailTemplates = {
             <h2>Welcome to TaskWave!</h2>
             <p>Hi ${firstName},</p>
             <p>Thank you for joining TaskWave. We're excited to help you manage your projects and tasks more efficiently.</p>
-            <p>Get started by:</p>
-            <ul>
-                <li>Creating your first project</li>
-                <li>Inviting team members</li>
-                <li>Adding tasks to your project</li>
-            </ul>
             <p>Visit your dashboard: <a href="${env.APP_URL}/dashboard">Click here</a></p>
         `
     }),
@@ -107,7 +57,6 @@ export const emailTemplates = {
         html: `
             <h2>Task Assignment</h2>
             <p>You have been assigned to a task in ${project.name}.</p>
-            <h3>Task Details:</h3>
             <ul>
                 <li><strong>Title:</strong> ${task.title}</li>
                 <li><strong>Description:</strong> ${task.description || 'No description'}</li>
@@ -123,7 +72,6 @@ export const emailTemplates = {
         html: `
             <h2>Task Status Update</h2>
             <p>A task in ${project.name} has been updated.</p>
-            <h3>Task Details:</h3>
             <ul>
                 <li><strong>Title:</strong> ${task.title}</li>
                 <li><strong>New Status:</strong> ${task.status}</li>
@@ -139,7 +87,6 @@ export const emailTemplates = {
         html: `
             <h2>Project Invitation</h2>
             <p>${inviter.firstName} ${inviter.lastName} has invited you to join their project.</p>
-            <h3>Project Details:</h3>
             <ul>
                 <li><strong>Name:</strong> ${project.name}</li>
                 <li><strong>Description:</strong> ${project.description || 'No description'}</li>
@@ -148,15 +95,13 @@ export const emailTemplates = {
         `
     }),
 
-    passwordReset: (resetToken: string) => ({
+    passwordReset: (resetUrl: string) => ({
         subject: 'Reset Your TaskWave Password',
         html: `
-            <h2>Password Reset Request</h2>
-            <p>You have requested to reset your password.</p>
-            <p>Click the link below to reset your password:</p>
-            <p><a href="${env.APP_URL}/auth/reset-password/${resetToken}">Reset Password</a></p>
-            <p>If you didn't request this, please ignore this email.</p>
-            <p>This link will expire in 1 hour.</p>
+            <h1>Reset Your Password</h1>
+                <p>Click the link below to reset your password:</p>
+                <a href="${resetUrl}">${resetUrl}</a>
+                <p>If you didn't request this, you can safely ignore this email.</p>
         `
     }),
 
@@ -164,9 +109,16 @@ export const emailTemplates = {
         subject: 'Verify Your TaskWave Email',
         html: `
             <h2>Email Verification</h2>
-            <p>Please verify your email address by clicking the link below:</p>
             <p><a href="${env.APP_URL}/auth/verify-email/${verificationToken}">Verify Email</a></p>
-            <p>If you didn't create an account, please ignore this email.</p>
+        `
+    }),
+
+    passwordResetConfirm: ()=>({
+        subject: 'Password Reset Successful',
+        html:`
+                <h1>Password Reset Successful</h1>
+                <p>Your password has been successfully reset.</p>
+                <p>If you didn't make this change, please contact support immediately.</p>
         `
     })
 };

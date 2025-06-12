@@ -106,7 +106,7 @@ TaskWave is built to simulate a real-world team collaboration platform. It inclu
 
 ## 📦 Folder Structure
 
-```
+```file
 src/
 ├── controllers/
 ├── models/

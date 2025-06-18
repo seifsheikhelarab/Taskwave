@@ -14,7 +14,7 @@ declare module 'express-session' {
 }
 
 // Signup
-export const signupGetController = (req: Request, res: Response) => {
+export const signupGetController = (req:Request, res: Response) => {
     res.render("authentication/signup", {
         errors: [],
         oldInput: {}
@@ -47,7 +47,7 @@ export const signupPostController = async (req: Request, res: Response) => {
         
         res.redirect('/user/profile');
     } catch (error) {
-        console.error('Signup error:', error);
+        logger.error('Signup error:', error);
         res.render("authentication/signup", {
             errors: [{ msg: 'An error occurred during signup' }],
             oldInput: req.body
@@ -65,26 +65,23 @@ export const loginGetController = (req: Request, res: Response) => {
 
 export const loginPostController = async (req: Request, res: Response) => {
     try {
-        const { email, password, remember } = req.body;
+        const { email, password } = req.body;
 
         // Find user and check password
         const user = await User.findOne({ email }).select('+password');
         if (!user || !(await user.correctPassword(password))) {
             return res.render("authentication/login", {
-                errors: [{ msg: 'Invalid email or password' }],
+                errors: [{ msg: 'Invalid credentials' }],
                 oldInput: req.body
             });
         }
 
         // Set session
         req.session.userId = (user._id as Types.ObjectId).toString();
-        if (remember) {
-            req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
-        }
-
         res.redirect('/user/profile');
+
     } catch (error) {
-        console.error('Login error:', error);
+        logger.error('Login error:', error);
         res.render("authentication/login", {
             errors: [{ msg: 'An error occurred during login' }],
             oldInput: req.body
@@ -96,7 +93,7 @@ export const loginPostController = async (req: Request, res: Response) => {
 export const logoutController = (req: Request, res: Response) => {
     req.session.destroy((err) => {
         if (err) {
-            console.error('Logout error:', err);
+            logger.error('Logout error:', err);
         }
         res.redirect('/');
     });
@@ -117,7 +114,6 @@ export const resetPostController = async (req: Request, res: Response) => {
         // Find user by email
         const user = await User.findOne({ email });
         if (!user) {
-            // Don't reveal if email exists or not
             return res.render('authentication/reset', {
                 success: 'If an account exists with this email, you will receive a password reset link.'
             });
@@ -135,7 +131,7 @@ export const resetPostController = async (req: Request, res: Response) => {
             success: 'If an account exists with this email, you will receive a password reset link.'
         });
     } catch (error) {
-        console.error('Password reset request error:', error);
+        logger.error('Password reset request error:', error);
         res.render('authentication/reset', {
             error: 'An error occurred. Please try again.'
         });
@@ -149,13 +145,13 @@ export const resetConfirmGetController = async (req: Request, res: Response) => 
         
         if (!user) {
             return res.render('authentication/reset', {
-                error: 'Invalid or expired reset link.'
+                error: 'Invalid link.'
             });
         }
 
         res.render('authentication/reset-confirm', { userId: id });
     } catch (error) {
-        console.error('Show reset form error:', error);
+        logger.error('reset form error');
         res.render('authentication/reset', {
             error: 'An error occurred. Please try again.'
         });
@@ -179,7 +175,7 @@ export const resetConfirmPostController = async (req: Request, res: Response) =>
         const user = await User.findById(id);
         if (!user) {
             return res.render('authentication/reset', {
-                error: 'Invalid or expired reset link.'
+                error: 'Invalid reset link.'
             });
         }
 
@@ -195,7 +191,7 @@ export const resetConfirmPostController = async (req: Request, res: Response) =>
             
         );
 
-        res.redirect('/auth/login?success=Password has been reset successfully');
+        res.redirect('/auth/login');
     } catch (error) {
         console.error('Reset password error:', error);
         res.render('authentication/reset-confirm', {

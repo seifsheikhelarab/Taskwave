@@ -18,25 +18,16 @@ interface MailConfig {
     from: string;
 }
 
-const env = {
-    SMTP_HOST: process.env.SMTP_HOST!,
-    SMTP_PORT: parseInt(process.env.SMTP_PORT!),
-    SMTP_SECURE: process.env.SMTP_SECURE === 'true',
-    SMTP_USER: process.env.SMTP_USER!,
-    SMTP_PASS: process.env.SMTP_PASS!,
-    SMTP_FROM: process.env.SMTP_FROM!,
-    APP_URL: process.env.APP_URL!
-};
 
 export const mailConfig: MailConfig = {
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
+    host: process.env.SMTP_HOST!,
+    port: parseInt(process.env.SMTP_PORT!),
+    secure: process.env.SMTP_SECURE === 'true',
     auth: {
-        user: env.SMTP_USER,
-        pass: env.SMTP_PASS
+        user: process.env.SMTP_USER!,
+        pass: process.env.SMTP_PASS!
     },
-    from: env.SMTP_FROM
+    from: process.env.SMTP_FROM!
 };
 
 export const transporter = nodemailer.createTransport(mailConfig as SMTPTransport.Options);
@@ -48,7 +39,7 @@ export const emailTemplates = {
             <h2>Welcome to TaskWave!</h2>
             <p>Hi ${firstName},</p>
             <p>Thank you for joining TaskWave. We're excited to help you manage your projects and tasks more efficiently.</p>
-            <p>Visit your dashboard: <a href="${env.APP_URL}/dashboard">Click here</a></p>
+            <p>Visit your dashboard: <a href="${process.env.APP_URL!}/dashboard">Click here</a></p>
         `
     }),
 
@@ -63,7 +54,7 @@ export const emailTemplates = {
                 <li><strong>Priority:</strong> ${task.priority}</li>
                 <li><strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}</li>
             </ul>
-            <p>View the task: <a href="${env.APP_URL}/tasks/${task._id}">Click here</a></p>
+            <p>View the task: <a href="${process.env.APP_URL!}/tasks/${task._id}">Click here</a></p>
         `
     }),
 
@@ -78,7 +69,7 @@ export const emailTemplates = {
                 <li><strong>Priority:</strong> ${task.priority}</li>
                 <li><strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}</li>
             </ul>
-            <p>View the task: <a href="${env.APP_URL}/tasks/${task._id}">Click here</a></p>
+            <p>View the task: <a href="${process.env.APP_URL!}/tasks/${task._id}">Click here</a></p>
         `
     }),
 
@@ -109,7 +100,7 @@ export const emailTemplates = {
         subject: 'Verify Your TaskWave Email',
         html: `
             <h2>Email Verification</h2>
-            <p><a href="${env.APP_URL}/auth/verify-email/${verificationToken}">Verify Email</a></p>
+            <p><a href="${process.env.APP_URL!}/auth/verify-email/${verificationToken}">Verify Email</a></p>
         `
     }),
 

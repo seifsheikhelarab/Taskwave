@@ -7,7 +7,7 @@ import { logger } from "./logger.config.js";
 
 export default function sessionSetup(app: Application) {
     const store = MongoStore.create({
-        mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/taskwave',
+        mongoUrl: process.env.MONGO_URI!,
         collectionName: 'sessions',
         ttl: 14 * 24 * 60 * 60,
         autoRemove: 'native',

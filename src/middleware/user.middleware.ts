@@ -12,7 +12,7 @@ export async function attachUserToViews(req: Request, res: Response, next: NextF
 
         if (req.session.userId) {
             const user = await User.findById(req.session.userId)
-                .select('-password -passwordResetToken -passwordResetExpires');
+                .select('-password');
             res.locals.user = user;
         } else {
             res.locals.user = null;

@@ -17,9 +17,6 @@ function isProjectNotNull(project: any): project is NonNullable<typeof project> 
 export async function projectsGetController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/login');
-        }
 
         const projects = await Project.find({
             $or: [
@@ -68,7 +65,7 @@ export async function projectsGetController(req: Request, res: Response) {
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error fetching projects:', error);
+        logger.error('Error fetching projects:', error);
         res.render("project/projects", {
             projects: [],
             errors: [{ msg: 'An error occurred while fetching your projects' }],
@@ -89,10 +86,6 @@ export function newProjectGetController(req: Request, res: Response) {
 export async function newProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            return res.redirect('/auth/login');
-        }
-
         const { name, description, visibility, startDate, dueDate } = req.body;
 
         // Validate required fields
@@ -125,7 +118,7 @@ export async function newProjectPostController(req: Request, res: Response) {
 
         res.redirect(`/projects/${project._id}`);
     } catch (error) {
-        console.error('Error creating project:', error);
+        logger.error('Error creating project:', error);
         res.render("project/new", {
             errors: [{ msg: 'An error occurred while creating the project' }],
             oldInput: req.body
@@ -137,11 +130,6 @@ export async function newProjectPostController(req: Request, res: Response) {
 export async function oneProjectGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
-
         let projectId;
         try {
             projectId = new Types.ObjectId(req.params.projectId);
@@ -201,7 +189,7 @@ export async function oneProjectGetController(req: Request, res: Response): Prom
             user: res.locals.user
         });
     } catch (error) {
-        console.error('Error fetching project:', error);
+        logger.error('Error fetching project:', error);
         res.status(500).render('error', { 
             message: 'An error occurred while fetching the project',
             error: { status: 500 }

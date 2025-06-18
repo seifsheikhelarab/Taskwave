@@ -11,12 +11,15 @@
               <p class="text-muted">Log in to access your projects and tasks</p>
             </div>
 
-            <% if (typeof error !== 'undefined') { %>
+            <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
               <div class="alert alert-danger">
-                <%= error %>
+                <ul class="mb-0">
+                  <% errors.forEach(error => { %>
+                    <li><%= error.msg %></li>
+                  <% }); %>
+                </ul>
               </div>
             <% } %>
-
             <% if (typeof success !== 'undefined') { %>
               <div class="alert alert-success">
                 <%= success %>

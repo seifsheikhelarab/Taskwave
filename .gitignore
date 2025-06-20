@@ -132,4 +132,3 @@ node_modules
 *.txt
 /.vscode
 /public/avatars
-/src/public/avatars

@@ -5,7 +5,6 @@ import { Application } from "express";
 import express from "express";
 import path from "path";
 import morgan from "morgan";
-import { __dirname } from "../app.js";
 import { attachUserToViews } from "../middleware/user.middleware.js";
 import methodOverride from "method-override";
 
@@ -15,10 +14,10 @@ export default function middlewareSetup(app: Application) {
 
     // View engine setup
     app.set("view engine", "ejs");
-    app.set('views', path.join(__dirname, 'views'));
+    app.set('views', path.join(process.cwd(), 'views'));
 
     // Static files
-    app.use(express.static(path.join(__dirname, 'public')));
+    app.use(express.static(path.join(process.cwd(), 'public')));
 
     // Body parsing
     app.use(express.urlencoded({ extended: false }));

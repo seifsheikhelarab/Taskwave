@@ -3,7 +3,6 @@ import { logger } from '../config/logger.config.js';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
-import { __dirname } from '../app.js';
 
 interface OAuthProfile {
     id: string;
@@ -25,7 +24,7 @@ class OAuthService {
 
     async downloadAndSaveAvatar(url: string, filename: string): Promise<string | null> {
         try {
-            const avatarDir = path.join(__dirname, 'public', 'avatars');
+            const avatarDir = path.join(process.cwd(), 'public', 'avatars');
             const avatarPath = path.join(avatarDir, filename);
 
             fs.mkdirSync(avatarDir, { recursive: true });

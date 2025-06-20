@@ -2,8 +2,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
 import passport from "passport";
 import { router } from "./routes/main.routes.js";
 import databaseSetup from "./config/database.config.js";
@@ -13,9 +11,6 @@ import { configurePassport } from "./config/passport.config.js";
 import { logger } from "./config/logger.config.js";
 
 const app = express();
-
-const __filename = fileURLToPath(import.meta.url); 
-export const __dirname = path.dirname(__filename);
 
 // Setup database
 databaseSetup();

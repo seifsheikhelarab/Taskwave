@@ -12,4 +12,5 @@ export function isNotAuthenticated(req: Request, res: Response, next: NextFuncti
         return next();
     }
     res.redirect('/');
-} 
+}
+

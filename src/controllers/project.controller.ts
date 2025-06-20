@@ -201,10 +201,7 @@ export async function oneProjectGetController(req: Request, res: Response): Prom
 export async function editProjectGetController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/auth/login');
-        }
-
+        
         const projectId = new Types.ObjectId(req.params.projectId);
         const project = await Project.findOne({
             _id: projectId,
@@ -226,7 +223,7 @@ export async function editProjectGetController(req: Request, res: Response) {
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error fetching project for edit:', error);
+        logger.error('Error fetching project for edit:', error);
         res.status(500).render("error", {
             message: "An error occurred while fetching the project"
         });
@@ -237,10 +234,6 @@ export async function editProjectGetController(req: Request, res: Response) {
 export async function editProjectPutController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect("/error");
-        }
-
         const projectId = new Types.ObjectId(req.params.projectId);
         const { name, description, status } = req.body;
 
@@ -281,10 +274,6 @@ export async function editProjectPutController(req: Request, res: Response) {
 export async function editProjectDeleteController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            return res.redirect('/auth/login');
-        }
-
         const projectId = new Types.ObjectId(req.params.projectId);
         const project = await Project.findOne({
             _id: projectId,
@@ -306,7 +295,7 @@ export async function editProjectDeleteController(req: Request, res: Response) {
 
         res.redirect('/projects');
     } catch (error) {
-        console.error('Error deleting project:', error);
+        logger.error('Error deleting project:', error);
         res.status(500).render('error', { 
             message: 'An error occurred while deleting the project',
             error: { status: 500 }
@@ -318,10 +307,6 @@ export async function editProjectDeleteController(req: Request, res: Response) {
 export async function inviteProjectGetController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         const projectId = new Types.ObjectId(req.params.projectId);
         const project = await Project.findOne({
@@ -345,7 +330,7 @@ export async function inviteProjectGetController(req: Request, res: Response) {
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error fetching project for invite:', error);
+        logger.error('Error fetching project for invite:', error);
         res.status(500).render("error", {
             message: "An error occurred while fetching the project"
         });
@@ -356,10 +341,6 @@ export async function inviteProjectGetController(req: Request, res: Response) {
 export async function inviteProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            return res.redirect('/auth/login');
-        }
-
         const projectId = new Types.ObjectId(req.params.projectId);
         const { email, role } = req.body;
 
@@ -412,14 +393,6 @@ export async function inviteProjectPostController(req: Request, res: Response) {
 
         // Create invitation
         const token = crypto.randomBytes(32).toString('hex');
-        const invitation = await Invitation.create({
-            project: project._id,
-            email,
-            role: role || 'member',
-            token,
-            invitedBy: userId,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        });
 
         // Send invitation email
         const joinLink = `${process.env.BASE_URL}/projects/${project._id}/join/${token}`;
@@ -437,7 +410,7 @@ export async function inviteProjectPostController(req: Request, res: Response) {
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error sending invitation:', error);
+        logger.error('Error sending invitation:', error);
         const project = await Project.findById(req.params.projectId).populate('members.user', 'firstName lastName email avatar');
         res.render("project/invite", {
             project,
@@ -457,7 +430,7 @@ export async function joinProjectGetController(req: Request, res: Response) {
         }
         res.render('project/join', { token, projectId, email: invitation.email, errors: [], oldInput: {} });
     } catch (error) {
-        console.error('Error showing join page:', error);
+        logger.error('Error showing join page:', error);
         res.status(500).render('error', { message: 'An error occurred while processing your request' });
     }
 }
@@ -488,7 +461,7 @@ export async function joinProjectPostController(req: Request, res: Response) {
         await invitation!.save();
         res.redirect(`/projects/${projectId}`);
     } catch (error) {
-        console.error('Error joining project:', error);
+        logger.error('Error joining project:', error);
         res.status(500).render('error', { message: 'An error occurred while joining the project' });
     }
 }
@@ -564,7 +537,7 @@ export async function leaveProjectPostController(req: Request, res: Response) {
 
         res.json({ message: 'Successfully left the project' });
     } catch (error) {
-        console.error('Error leaving project:', error);
+        logger.error('Error leaving project:', error);
         res.status(500).json({ message: 'An error occurred while leaving the project' });
     }
 }

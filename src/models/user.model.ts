@@ -48,7 +48,7 @@ const userSchema = new Schema<IUser, IUserModel>({
     password: {
         type: String,
         required: function(this: IUser) {
-            return !this.oauthProvider; // Only required if not using OAuth
+            return !this.oauthProvider;
         },
         minlength: [8, 'Password must be at least 8 characters'],
         select: false

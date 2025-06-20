@@ -39,9 +39,11 @@ router.route("/reset/:id")
     .post(isNotAuthenticated, authRateLimit, resetConfirmPostController);
 
 // OAuth routes
-router.get('/google', isNotAuthenticated, passport.authenticate('google', { 
-    scope: ['profile', 'email']
-}));
+router.get('/google', isNotAuthenticated, 
+    passport.authenticate('google', { 
+        scope: ['profile', 'email']
+    }
+));
 router.get('/google/callback', 
     passport.authenticate('google', { 
         failureRedirect: '/auth/login'

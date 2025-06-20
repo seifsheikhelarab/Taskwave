@@ -20,10 +20,6 @@ interface TeamMember {
 export async function teamGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         // Get current user
         const currentUser = await User.findById(userId).select('firstName lastName email avatar').lean();
@@ -99,10 +95,6 @@ export async function inviteTeamPostController(req: Request, res: Response): Pro
         const { email, role } = req.body;
         const userId = req.session.userId;
 
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         // Get current user (inviter)
         const inviter = await User.findById(userId).select('firstName lastName email').lean();
@@ -173,10 +165,6 @@ export async function removeTeamMemberPostController(req: Request, res: Response
         const { memberId } = req.params;
         const userId = req.session.userId;
 
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         const project = await Project.findOne({
             createdBy: userId
@@ -211,10 +199,6 @@ export async function changeRolePostController(req: Request, res: Response): Pro
         const { memberId, newRole } = req.body;
         const userId = req.session.userId;
 
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         const project = await Project.findOne({
             createdBy: userId

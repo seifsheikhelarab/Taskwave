@@ -1,17 +1,18 @@
 import express from "express";
 import { isAuthenticated } from "../middleware/authentication.middleware.js";
-import { errorController, indexController } from "../controllers/main.controller.js";
+import { errorController } from "../controllers/main.controller.js";
 
 import authenticationRouter from "./authentication.routes.js";
 import projectRouter from "./project.routes.js";
 import taskRouter from "./task.routes.js";
 import userRouter from "./user.routes.js";
 import teamRouter from "./team.routes.js";
+import publicRouter from "./public.routes.js";
 
 export const router = express.Router();
 
 // Public routes
-router.get("/", indexController);
+router.use("/", publicRouter);
 router.use("/auth", authenticationRouter);
 
 // Protected routes

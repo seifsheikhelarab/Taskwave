@@ -1,19 +1,16 @@
 import { Request, Response } from "express";
-import Task, { ITask } from "../models/task.model.js";
+import Task from "../models/task.model.js";
 import Project from "../models/project.model.js";
 import User from "../models/user.model.js";
 import { Types } from "mongoose";
 import { emailService } from "../services/email.service.js";
+import { logger } from "../config/logger.config.js";
 
 // Get all tasks
 export async function tasksGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
-
+        
         const { search, status, priority, sort } = req.query;
         const projectId = req.params.projectId;
 
@@ -125,7 +122,7 @@ export async function tasksGetController(req: Request, res: Response): Promise<v
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error fetching tasks:', error);
+        logger.error('Error fetching tasks:', error);
         res.status(500).render("error", {
             message: "An error occurred while fetching tasks"
         });
@@ -136,10 +133,6 @@ export async function tasksGetController(req: Request, res: Response): Promise<v
 export async function newTaskGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         // Get all projects the user has access to
         const projects = await Project.find({
@@ -148,7 +141,6 @@ export async function newTaskGetController(req: Request, res: Response): Promise
                 { 'members.user': userId }
             ]
         }).populate('members.user', 'firstName lastName email avatar');
-        console.log(projects);
 
         if (!projects || projects.length === 0) {
             res.status(404).render("error", {
@@ -163,7 +155,7 @@ export async function newTaskGetController(req: Request, res: Response): Promise
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error showing new task form:', error);
+        logger.error('Error showing new task form:', error);
         res.status(500).render("error", {
             message: "An error occurred while loading the form"
         });
@@ -181,8 +173,6 @@ export async function newTaskPostController(req: Request, res: Response): Promis
         const userIdObj = new Types.ObjectId(req.session.userId);
         const projectId = new Types.ObjectId(req.body.project);
 
-        console.log(projectId);
-        console.log(userIdObj);
         const { title, description, status, priority, dueDate, assignees } = req.body;
 
         // Check if user has access to the project
@@ -191,7 +181,6 @@ export async function newTaskPostController(req: Request, res: Response): Promis
             createdBy: userIdObj,
         });
 
-        console.log(project);
         if (!project) {
             res.status(404).json({ message: "Project not found or you don't have access to it" });
             return;
@@ -230,7 +219,7 @@ export async function newTaskPostController(req: Request, res: Response): Promis
         // Redirect back to project page
         res.redirect(`/projects/${projectId}`);
     } catch (error) {
-        console.error('Error creating task:', error);
+        logger.error('Error creating task:', error);
         res.status(500).json({ message: 'An error occurred while creating the task' });
     }
 }
@@ -239,10 +228,6 @@ export async function newTaskPostController(req: Request, res: Response): Promis
 export async function oneTaskGetController(req: Request, res: Response): Promise<void> {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         let taskId;
         try {
@@ -285,7 +270,7 @@ export async function oneTaskGetController(req: Request, res: Response): Promise
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error fetching task:', error);
+        logger.error('Error fetching task:', error);
         res.status(500).render("error", {
             message: "An error occurred while fetching the task"
         });
@@ -319,7 +304,7 @@ export async function updateTaskStatusController(req: Request, res: Response): P
 
         res.json({ message: 'Task status updated successfully' });
     } catch (error) {
-        console.error('Error updating task status:', error);
+        logger.error('Error updating task status:', error);
         res.status(500).json({ message: 'An error occurred while updating task status' });
     }
 }
@@ -364,7 +349,7 @@ export async function oneTaskPutController(req: Request, res: Response): Promise
 
         res.json({ message: 'Task updated successfully' });
     } catch (error) {
-        console.error('Error updating task:', error);
+        logger.error('Error updating task:', error);
         res.status(500).json({ message: 'An error occurred while updating the task' });
     }
 }
@@ -392,7 +377,7 @@ export async function oneTaskDeleteController(req: Request, res: Response): Prom
 
         res.json({ message: 'Task deleted successfully' });
     } catch (error) {
-        console.error('Error deleting task:', error);
+        logger.error('Error deleting task:', error);
         res.status(500).json({ message: 'An error occurred while deleting the task' });
     }
 }
@@ -448,7 +433,7 @@ export async function assignTaskPostController(req: Request, res: Response) {
             task
         });
     } catch (error) {
-        console.error('Error assigning users to task:', error);
+        logger.error('Error assigning users to task:', error);
         res.status(500).json({ message: 'An error occurred while assigning users to the task' });
     }
 }
@@ -511,7 +496,7 @@ export async function updateTaskStatusPostController(req: Request, res: Response
             task
         });
     } catch (error) {
-        console.error('Error updating task status:', error);
+        logger.error('Error updating task status:', error);
         res.status(500).json({ message: 'An error occurred while updating the task status' });
     }
 }
@@ -556,7 +541,7 @@ export async function taskSearchSuggestionsController(req: Request, res: Respons
 
         res.json({ suggestions });
     } catch (error) {
-        console.error('Error fetching search suggestions:', error);
+        logger.error('Error fetching search suggestions:', error);
         res.status(500).json({ message: 'An error occurred while fetching suggestions' });
     }
 }
@@ -567,10 +552,6 @@ export async function taskCreatePostController(req: Request, res: Response): Pro
         const { title, description, priority, dueDate, projectId, assignees } = req.body;
         const userId = req.session.userId;
 
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         const task = await Task.create({
             title,
@@ -594,7 +575,7 @@ export async function taskCreatePostController(req: Request, res: Response): Pro
 
         res.redirect('/tasks');
     } catch (error) {
-        console.error('Error creating task:', error);
+        logger.error('Error creating task:', error);
         res.status(500).render("error", {
             message: "An error occurred while creating task"
         });
@@ -608,10 +589,6 @@ export async function taskUpdatePostController(req: Request, res: Response): Pro
         const taskId = req.params.id;
         const userId = req.session.userId;
 
-        if (!userId) {
-            res.redirect('/auth/login');
-            return;
-        }
 
         const task = await Task.findById(taskId);
         if (!task) {
@@ -646,7 +623,7 @@ export async function taskUpdatePostController(req: Request, res: Response): Pro
 
         res.redirect('/tasks');
     } catch (error) {
-        console.error('Error updating task:', error);
+        logger.error('Error updating task:', error);
         res.status(500).render("error", {
             message: "An error occurred while updating task"
         });

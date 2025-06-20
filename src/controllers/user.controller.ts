@@ -1,16 +1,13 @@
 import { Request, Response } from "express";
-import User, { IUser } from "../models/user.model.js";
+import User from "../models/user.model.js";
 import Project from "../models/project.model.js";
 import Task from "../models/task.model.js";
-import bcrypt from "bcrypt";
+import { logger } from "../config/logger.config.js";
 
 // Get current user's profile
 export async function currentUserGetController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
-        if (!userId) {
-            res.redirect('/auth/login');
-        }
 
         const user = await User.findById(userId)
             .select('-password')
@@ -51,7 +48,7 @@ export async function currentUserGetController(req: Request, res: Response) {
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error fetching user profile:', error);
+        logger.error('Error fetching user profile:', error);
         res.status(500).render("error", {
             message: "An error occurred while fetching your profile"
         });
@@ -101,7 +98,7 @@ export async function currentUserPutController(req: Request, res: Response) {
             }
         });
     } catch (error) {
-        console.error('Error updating user profile:', error);
+        logger.error('Error updating user profile:', error);
         res.status(500).json({ message: 'An error occurred while updating your profile' });
     }
 }
@@ -154,13 +151,13 @@ export async function currentUserDeleteController(req: Request, res: Response) {
         // Clear session
         req.session.destroy((err) => {
             if (err) {
-                console.error('Error destroying session:', err);
+                logger.error('Error destroying session:', err);
             }
         });
 
         res.json({ message: 'Account deleted successfully' });
     } catch (error) {
-        console.error('Error deleting user account:', error);
+        logger.error('Error deleting user account:', error);
         res.status(500).json({ message: 'An error occurred while deleting your account' });
     }
 }
@@ -202,7 +199,7 @@ export async function publicUserGetController(req: Request, res: Response) {
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error fetching public user profile:', error);
+        logger.error('Error fetching public user profile:', error);
         res.status(500).render("error", {
             message: "An error occurred while fetching the user profile"
         });

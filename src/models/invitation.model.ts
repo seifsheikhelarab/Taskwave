@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
-import crypto from 'crypto';
 
 export interface IInvitation extends Document {
     project: Types.ObjectId;

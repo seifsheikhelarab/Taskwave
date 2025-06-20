@@ -3,9 +3,17 @@
 import {Request,Response} from "express";
 
 export async function indexController(req:Request, res:Response){
-    res.render("index");
+    res.render("public/index");
+}
+
+export async function featuresController(req:Request, res:Response){
+    res.render("public/features");
+}
+
+export async function aboutController(req:Request, res:Response){
+    res.render("public/about");
 }
 
 export async function errorController(req:Request, res:Response){
-    res.status(404).render("error")
+    res.status(404).render("public/error")
 }

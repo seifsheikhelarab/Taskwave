@@ -215,7 +215,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
         res.redirect('/projects');
     } catch (error) {
         logger.error('Google OAuth error:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred during Google authentication"
         });
     }

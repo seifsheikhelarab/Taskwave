@@ -41,7 +41,7 @@ export default function sessionSetup(app: Application) {
     app.use((err: any, req: any, res: any, next: any) => {
         if (err.code === 'ECONNREFUSED') {
             logger.error('Session store connection failed');
-            return res.status(500).render('error', { 
+            return res.status(500).render('public/error', { 
                 message: 'Session service unavailable' 
             });
         }

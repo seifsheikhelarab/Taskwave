@@ -134,7 +134,7 @@ export async function oneProjectGetController(req: Request, res: Response): Prom
         try {
             projectId = new Types.ObjectId(req.params.projectId);
         } catch (error) {
-            res.status(404).render('error', { 
+            res.status(404).render('public/error', { 
                 message: 'Project not found',
                 error: { status: 404 }
             });
@@ -150,7 +150,7 @@ export async function oneProjectGetController(req: Request, res: Response): Prom
         }).populate('members.user', 'firstName lastName email avatar');
 
         if (!project) {
-            res.status(404).render('error', { 
+            res.status(404).render('public/error', { 
                 message: 'Project not found or you do not have access to it',
                 error: { status: 404 }
             });
@@ -190,7 +190,7 @@ export async function oneProjectGetController(req: Request, res: Response): Prom
         });
     } catch (error) {
         logger.error('Error fetching project:', error);
-        res.status(500).render('error', { 
+        res.status(500).render('public/error', { 
             message: 'An error occurred while fetching the project',
             error: { status: 500 }
         });
@@ -212,7 +212,7 @@ export async function editProjectGetController(req: Request, res: Response) {
         });
 
         if (!project) {
-            res.status(404).render("error", {
+            res.status(404).render("public/error", {
                 message: "Project not found or you don't have permission to edit it"
             });
         }
@@ -224,7 +224,7 @@ export async function editProjectGetController(req: Request, res: Response) {
         });
     } catch (error) {
         logger.error('Error fetching project for edit:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred while fetching the project"
         });
     }
@@ -281,7 +281,7 @@ export async function editProjectDeleteController(req: Request, res: Response) {
         });
 
         if (!isProjectNotNull(project)) {
-            return res.status(404).render('error', { 
+            return res.status(404).render('public/error', { 
                 message: "Project not found or you don't have permission to delete it",
                 error: { status: 404 }
             });
@@ -296,7 +296,7 @@ export async function editProjectDeleteController(req: Request, res: Response) {
         res.redirect('/projects');
     } catch (error) {
         logger.error('Error deleting project:', error);
-        res.status(500).render('error', { 
+        res.status(500).render('public/error', { 
             message: 'An error occurred while deleting the project',
             error: { status: 500 }
         });
@@ -318,7 +318,7 @@ export async function inviteProjectGetController(req: Request, res: Response) {
         }).populate('members.user', 'firstName lastName email avatar');
 
         if (!project) {
-            res.status(404).render("error", {
+            res.status(404).render("public/error", {
                 message: "Project not found or you don't have permission to invite members"
             });
             return;
@@ -331,7 +331,7 @@ export async function inviteProjectGetController(req: Request, res: Response) {
         });
     } catch (error) {
         logger.error('Error fetching project for invite:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred while fetching the project"
         });
     }
@@ -375,14 +375,23 @@ export async function inviteProjectPostController(req: Request, res: Response) {
         });
 
         if (!project) {
-            return res.status(404).render("error", {
+            return res.status(404).render("public/error", {
                 message: "Project not found or you don't have permission to invite members"
             });
         }
 
-        // Check if user is already a member
+        // Check if user is trying to invite themselves
         const userDoc = await User.findOne({ email });
-        if (userDoc && project.members.some(m => m.user.toString() === userDoc._id.toString())) {
+        if (userDoc && userDoc._id.toString() === userId) {
+            const project = await Project.findById(projectId).populate('members.user', 'firstName lastName email avatar');
+            return res.render("project/invite", {
+                project,
+                errors: [{ msg: "You cannot invite yourself to your own project." }],
+                oldInput: req.body
+            });
+        }
+        // Check if user is already a member
+        if (userDoc && project.members.some(m => (m.user._id ? m.user._id.toString() : m.user.toString()) === userDoc._id.toString())) {
             const project = await Project.findById(projectId).populate('members.user', 'firstName lastName email avatar');
             return res.render("project/invite", {
                 project,
@@ -393,6 +402,16 @@ export async function inviteProjectPostController(req: Request, res: Response) {
 
         // Create invitation
         const token = crypto.randomBytes(32).toString('hex');
+
+        // Save invitation to database
+        await Invitation.create({
+            project: projectId,
+            email: email.toLowerCase(),
+            role: role,
+            token: token,
+            invitedBy: userId,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+        });
 
         // Send invitation email
         const joinLink = `${process.env.BASE_URL}/projects/${project._id}/join/${token}`;
@@ -424,14 +443,36 @@ export async function inviteProjectPostController(req: Request, res: Response) {
 export async function joinProjectGetController(req: Request, res: Response) {
     try {
         const { projectId, token } = req.params;
-        const invitation = await Invitation.findOne({ project: projectId, token, status: 'pending', expiresAt: { $gt: new Date() } });
+        
+        // Log the request details for debugging
+        logger.info(`Join project request - ProjectId: ${projectId}, Token: ${token}`);
+        
+        // First check if the invitation exists at all
+        const invitation = await Invitation.findOne({ project: projectId, token });
+        
         if (!invitation) {
-            return res.status(400).render('error', { message: 'Invalid or expired invitation link.' });
+            logger.warn(`Invitation not found - ProjectId: ${projectId}, Token: ${token}`);
+            return res.status(400).render('public/error', { message: 'Invalid or expired invitation link.' });
         }
+        
+        // Log invitation details for debugging
+        logger.info(`Invitation found - Status: ${invitation.status}, ExpiresAt: ${invitation.expiresAt}, Current time: ${new Date()}`);
+        
+        // Check if invitation is pending and not expired
+        if (invitation.status !== 'pending') {
+            logger.warn(`Invitation status is not pending - Status: ${invitation.status}`);
+            return res.status(400).render('public/error', { message: 'This invitation has already been used or is no longer valid.' });
+        }
+        
+        if (invitation.expiresAt < new Date()) {
+            logger.warn(`Invitation has expired - ExpiresAt: ${invitation.expiresAt}, Current time: ${new Date()}`);
+            return res.status(400).render('public/error', { message: 'This invitation has expired.' });
+        }
+        
         res.render('project/join', { token, projectId, email: invitation.email, errors: [], oldInput: {} });
     } catch (error) {
         logger.error('Error showing join page:', error);
-        res.status(500).render('error', { message: 'An error occurred while processing your request' });
+        res.status(500).render('public/error', { message: 'An error occurred while processing your request' });
     }
 }
 
@@ -445,15 +486,15 @@ export async function joinProjectPostController(req: Request, res: Response) {
         const { projectId, token } = req.params;
         const invitation = await Invitation.findOne({ project: projectId, token, status: 'pending', expiresAt: { $gt: new Date() } });
         if (!invitation) {
-            res.status(400).render('error', { message: 'Invalid or expired invitation link.' });
+            res.status(400).render('public/error', { message: 'Invalid or expired invitation link.' });
         }
         // Add user to project
         const project = await Project.findById(projectId);
         if (!project) {
-            res.status(404).render('error', { message: 'Project not found.' });
+            res.status(404).render('public/error', { message: 'Project not found.' });
         }
         if (project!.members.some(m => m.user.toString() === userId)) {
-            res.status(400).render('error', { message: 'You are already a member of this project.' });
+            res.status(400).render('public/error', { message: 'You are already a member of this project.' });
         }
         project!.members.push({ user: new Types.ObjectId(userId), role: invitation!.role, joinedAt: new Date() });
         await project!.save();
@@ -462,7 +503,7 @@ export async function joinProjectPostController(req: Request, res: Response) {
         res.redirect(`/projects/${projectId}`);
     } catch (error) {
         logger.error('Error joining project:', error);
-        res.status(500).render('error', { message: 'An error occurred while joining the project' });
+        res.status(500).render('public/error', { message: 'An error occurred while joining the project' });
     }
 }
 
@@ -481,14 +522,14 @@ export async function leaveProjectGetController(req: Request, res: Response) {
         });
 
         if (!isProjectNotNull(project)) {
-            res.status(404).render("error", {
+            res.status(404).render("public/error", {
                 message: "Project not found or you're not a member"
             });
         }
 
         // Check if user is the owner
         if (project!.createdBy.toString() === userId) {
-            res.status(400).render("error", {
+            res.status(400).render("public/error", {
                 message: "Project owner cannot leave. Please transfer ownership or delete the project."
             });
         }
@@ -500,7 +541,7 @@ export async function leaveProjectGetController(req: Request, res: Response) {
         });
     } catch (error) {
         console.error('Error showing leave page:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred while processing your request"
         });
     }

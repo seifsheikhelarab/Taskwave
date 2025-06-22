@@ -123,7 +123,7 @@ export async function tasksGetController(req: Request, res: Response): Promise<v
         });
     } catch (error) {
         logger.error('Error fetching tasks:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred while fetching tasks"
         });
     }
@@ -143,7 +143,7 @@ export async function newTaskGetController(req: Request, res: Response): Promise
         }).populate('members.user', 'firstName lastName email avatar');
 
         if (!projects || projects.length === 0) {
-            res.status(404).render("error", {
+            res.status(404).render("public/error", {
                 message: "You don't have access to any projects. Please create or join a project first."
             });
             return;
@@ -156,7 +156,7 @@ export async function newTaskGetController(req: Request, res: Response): Promise
         });
     } catch (error) {
         logger.error('Error showing new task form:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred while loading the form"
         });
     }
@@ -233,7 +233,7 @@ export async function oneTaskGetController(req: Request, res: Response): Promise
         try {
             taskId = new Types.ObjectId(req.params.taskId);
         } catch (error) {
-            return res.status(400).render("error", {
+            return res.status(400).render("public/error", {
                 message: "Invalid task ID format"
             });
         }
@@ -241,7 +241,7 @@ export async function oneTaskGetController(req: Request, res: Response): Promise
         const task = await Task.findById(taskId).lean();
 
         if (!task) {
-            res.status(404).render("error", {
+            res.status(404).render("public/error", {
                 message: "Task not found"
             });
             return;
@@ -257,7 +257,7 @@ export async function oneTaskGetController(req: Request, res: Response): Promise
         });
 
         if (!project) {
-            res.status(404).render("error", {
+            res.status(404).render("public/error", {
                 message: "You don't have access to this task"
             });
             return;
@@ -271,7 +271,7 @@ export async function oneTaskGetController(req: Request, res: Response): Promise
         });
     } catch (error) {
         logger.error('Error fetching task:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred while fetching the task"
         });
     }
@@ -576,7 +576,7 @@ export async function taskCreatePostController(req: Request, res: Response): Pro
         res.redirect('/tasks');
     } catch (error) {
         logger.error('Error creating task:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred while creating task"
         });
     }
@@ -592,7 +592,7 @@ export async function taskUpdatePostController(req: Request, res: Response): Pro
 
         const task = await Task.findById(taskId);
         if (!task) {
-            res.status(404).render("error", {
+            res.status(404).render("public/error", {
                 message: "Task not found"
             });
             return;
@@ -624,7 +624,7 @@ export async function taskUpdatePostController(req: Request, res: Response): Pro
         res.redirect('/tasks');
     } catch (error) {
         logger.error('Error updating task:', error);
-        res.status(500).render("error", {
+        res.status(500).render("public/error", {
             message: "An error occurred while updating task"
         });
     }

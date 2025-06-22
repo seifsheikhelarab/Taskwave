@@ -2,19 +2,92 @@
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
+        <div class="col-lg-8 col-md-10 text-center">
             <div class="error-page">
-                <h2 class="mb-4">Page Not Found or Unauthorized</h2>
-                <p class="lead text-muted mb-5">
-                    Oops! The page you're looking for doesn't exist or you don't have access to it.
+                <!-- Animated Error Icon -->
+                <div class="error-icon mb-4">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                
+                <!-- Error Code -->
+                <h1 class="error-code mb-3">
+                    <% if (typeof error !== 'undefined' && error.status) { %>
+                        <%= error.status %>
+                    <% } else { %>
+                        404
+                    <% } %>
+                </h1>
+                
+                <!-- Error Title -->
+                <h2 class="error-title mb-4">
+                    <% if (typeof error !== 'undefined' && error.status === 404) { %>
+                        Page Not Found
+                    <% } else if (typeof error !== 'undefined' && error.status === 403) { %>
+                        Access Denied
+                    <% } else if (typeof error !== 'undefined' && error.status === 500) { %>
+                        Server Error
+                    <% } else if (typeof message !== 'undefined') { %>
+                        <%= message %>
+                    <% } else { %>
+                        Oops! Something went wrong
+                    <% } %>
+                </h2>
+                
+                <!-- Error Description -->
+                <p class="error-description lead text-muted mb-5">
+                    <% if (typeof error !== 'undefined' && error.status === 404) { %>
+                        The page you're looking for doesn't exist or has been moved.
+                    <% } else if (typeof error !== 'undefined' && error.status === 403) { %>
+                        You don't have permission to access this resource.
+                    <% } else if (typeof error !== 'undefined' && error.status === 500) { %>
+                        We're experiencing technical difficulties. Please try again later.
+                    <% } else { %>
+                        We're sorry, but something unexpected happened. Please try again.
+                    <% } %>
                 </p>
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="/" class="btn btn-primary">
+                
+                <!-- Action Buttons -->
+                <div class="error-actions d-flex flex-column flex-sm-row justify-content-center gap-3 mb-5">
+                    <a href="/" class="btn btn-primary btn-lg">
                         <i class="fas fa-home me-2"></i>Go Home
                     </a>
-                    <button onclick="history.back()" class="btn btn-outline-secondary">
+                    <button onclick="history.back()" class="btn btn-outline-secondary btn-lg">
                         <i class="fas fa-arrow-left me-2"></i>Go Back
                     </button>
+                    <a href="/projects" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-project-diagram me-2"></i>My Projects
+                    </a>
+                </div>
+                
+                <!-- Helpful Links -->
+                <div class="error-help">
+                    <h5 class="text-muted mb-3">Need Help?</h5>
+                    <div class="row justify-content-center">
+                        <div class="col-md-4 mb-3">
+                            <a href="/features" class="text-decoration-none">
+                                <div class="help-card p-3 rounded">
+                                    <i class="fas fa-info-circle text-primary mb-2"></i>
+                                    <div class="small">Learn about features</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="/about" class="text-decoration-none">
+                                <div class="help-card p-3 rounded">
+                                    <i class="fas fa-question-circle text-primary mb-2"></i>
+                                    <div class="small">About TaskWave</div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="/auth/login" class="text-decoration-none">
+                                <div class="help-card p-3 rounded">
+                                    <i class="fas fa-sign-in-alt text-primary mb-2"></i>
+                                    <div class="small">Sign in</div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -22,24 +95,130 @@
 </div>
 
 <style>
-    .error-page {
-        padding: 3rem 0;
+.error-page {
+    padding: 2rem 0;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.error-icon {
+    font-size: 4rem;
+    color: #ff6b6b;
+    animation: bounce 2s infinite;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #6e8efb, #a777e3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fadeInUp 1s ease-out;
+}
+
+.error-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2d3436;
+    animation: fadeInUp 1s ease-out 0.2s both;
+}
+
+.error-description {
+    font-size: 1.3rem;
+    color: #636e72;
+    animation: fadeInUp 1s ease-out 0.4s both;
+}
+
+.error-actions {
+    animation: fadeInUp 1s ease-out 0.6s both;
+}
+
+.error-help {
+    animation: fadeInUp 1s ease-out 0.8s both;
+}
+
+.help-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.help-card:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.help-card i {
+    font-size: 1.5rem;
+    display: block;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
     }
-    .error-page h1 {
-        font-size: 8rem;
-        line-height: 1;
-        margin-bottom: 1rem;
-        background: linear-gradient(45deg, var(--bs-primary), #6c5ce7);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    40% {
+        transform: translateY(-10px);
     }
-    .error-page h2 {
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 4rem;
+    }
+    
+    .error-title {
         font-size: 2rem;
-        color: #2d3436;
     }
-    .error-page .lead {
-        font-size: 1.2rem;
+    
+    .error-description {
+        font-size: 1.1rem;
     }
+    
+    .error-icon {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .error-code {
+        font-size: 3rem;
+    }
+    
+    .error-title {
+        font-size: 1.5rem;
+    }
+    
+    .error-description {
+        font-size: 1rem;
+    }
+    
+    .error-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
 </style>
 
 <%- include('../partials/footer') %>

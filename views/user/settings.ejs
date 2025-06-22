@@ -10,7 +10,7 @@
             <h1 class="h2 fw-bold mb-0">Settings</h1>
             <p class="text-muted mb-0">Manage your account settings and preferences</p>
           </div>
-          <a href="/me" class="btn btn-outline-secondary">
+          <a href="/user/profile" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i>Back to Profile
           </a>
         </div>
@@ -29,21 +29,16 @@
                   <i class="fas fa-lock me-2"></i>Security
                 </button>
               </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#notifications" type="button">
-                  <i class="fas fa-bell me-2"></i>Notifications
-                </button>
-              </li>
             </ul>
 
             <div class="tab-content p-4">
               <!-- Profile Settings -->
               <div class="tab-pane fade show active" id="profile">
-                <form action="/settings/profile" method="POST" enctype="multipart/form-data">
+                <form action="/user/settings/profile" method="POST">
                   <div class="text-center mb-4">
                     <div class="position-relative d-inline-block">
-                      <% if (user.avatar) { %>
-                        <img src="<%= user.avatar || '/img/default.jpg' %>" alt="<%= user.firstName %>" class="rounded-circle mb-3" width="120" height="120">
+                      <% if (user.avatar && user.avatar !== '/img/default.jpg') { %>
+                        <img src="<%= user.avatar %>" alt="<%= user.firstName %>" class="rounded-circle mb-3" width="120" height="120" style="object-fit: cover;">
                       <% } else { %>
                         <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
                           <i class="fas fa-user fa-3x text-primary"></i>
@@ -69,10 +64,6 @@
                       <label for="email" class="form-label">Email Address</label>
                       <input type="email" class="form-control" id="email" name="email" value="<%= user.email %>" required>
                     </div>
-                    <div class="col-12">
-                      <label for="bio" class="form-label">Bio</label>
-                      <textarea class="form-control" id="bio" name="bio" rows="3"><%= user.bio || '' %></textarea>
-                    </div>
                   </div>
 
                   <div class="d-flex justify-content-end mt-4">
@@ -85,7 +76,8 @@
 
               <!-- Security Settings -->
               <div class="tab-pane fade" id="security">
-                <form action="/settings/password" method="POST">
+                <form action="/user/settings/password" method="POST">
+                  <input type="hidden" name="_method" value="PUT">
                   <div class="row g-3">
                     <div class="col-12">
                       <label for="currentPassword" class="form-label">Current Password</label>
@@ -110,77 +102,16 @@
 
                 <hr class="my-4">
 
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h5 class="mb-1">Two-Factor Authentication</h5>
-                    <p class="text-muted mb-0">Add an extra layer of security to your account</p>
-                  </div>
-                  <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="twoFactorEnabled" <%= user.twoFactorEnabled ? 'checked' : '' %>>
-                    <label class="form-check-label" for="twoFactorEnabled">Enable 2FA</label>
-                  </div>
+                <!-- Account Deletion -->
+                <div class="border border-danger rounded p-3 bg-danger bg-opacity-10">
+                  <h5 class="text-danger mb-2">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                  </h5>
+                  <p class="text-muted mb-3">Once you delete your account, there is no going back. Please be certain.</p>
+                  <button type="button" class="btn btn-outline-danger" onclick="confirmAccountDeletion()">
+                    <i class="fas fa-trash me-2"></i>Delete Account
+                  </button>
                 </div>
-              </div>
-
-              <!-- Notification Settings -->
-              <div class="tab-pane fade" id="notifications">
-                <form action="/settings/notifications" method="POST">
-                  <div class="mb-4">
-                    <h5 class="mb-3">Email Notifications</h5>
-                    <div class="form-check mb-2">
-                      <input class="form-check-input" type="checkbox" id="emailTaskUpdates" name="emailTaskUpdates" <%= user.notifications?.emailTaskUpdates ? 'checked' : '' %>>
-                      <label class="form-check-label" for="emailTaskUpdates">
-                        Task Updates
-                        <small class="d-block text-muted">Get notified when tasks are assigned, updated, or completed</small>
-                      </label>
-                    </div>
-                    <div class="form-check mb-2">
-                      <input class="form-check-input" type="checkbox" id="emailProjectUpdates" name="emailProjectUpdates" <%= user.notifications?.emailProjectUpdates ? 'checked' : '' %>>
-                      <label class="form-check-label" for="emailProjectUpdates">
-                        Project Updates
-                        <small class="d-block text-muted">Get notified about project changes and team activities</small>
-                      </label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="emailMentions" name="emailMentions" <%= user.notifications?.emailMentions ? 'checked' : '' %>>
-                      <label class="form-check-label" for="emailMentions">
-                        Mentions
-                        <small class="d-block text-muted">Get notified when someone mentions you in a comment</small>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div class="mb-4">
-                    <h5 class="mb-3">In-App Notifications</h5>
-                    <div class="form-check mb-2">
-                      <input class="form-check-input" type="checkbox" id="inAppTaskUpdates" name="inAppTaskUpdates" <%= user.notifications?.inAppTaskUpdates ? 'checked' : '' %>>
-                      <label class="form-check-label" for="inAppTaskUpdates">
-                        Task Updates
-                        <small class="d-block text-muted">Show notifications for task-related activities</small>
-                      </label>
-                    </div>
-                    <div class="form-check mb-2">
-                      <input class="form-check-input" type="checkbox" id="inAppProjectUpdates" name="inAppProjectUpdates" <%= user.notifications?.inAppProjectUpdates ? 'checked' : '' %>>
-                      <label class="form-check-label" for="inAppProjectUpdates">
-                        Project Updates
-                        <small class="d-block text-muted">Show notifications for project-related activities</small>
-                      </label>
-                    </div>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="inAppMentions" name="inAppMentions" <%= user.notifications?.inAppMentions ? 'checked' : '' %>>
-                      <label class="form-check-label" for="inAppMentions">
-                        Mentions
-                        <small class="d-block text-muted">Show notifications when someone mentions you</small>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary">
-                      <i class="fas fa-save me-2"></i>Save Preferences
-                    </button>
-                  </div>
-                </form>
               </div>
             </div>
           </div>
@@ -189,5 +120,7 @@
     </div>
   </div>
 </main>
+
+<script src="/js/settings.js"></script>
 
 <%- include('../partials/footer'); %> 

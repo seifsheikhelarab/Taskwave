@@ -9,6 +9,7 @@ import middlewareSetup from "./config/middleware.config.js";
 import sessionSetup from "./config/session.config.js";
 import { configurePassport } from "./config/passport.config.js";
 import { logger } from "./config/logger.config.js";
+import swaggerSetup from "./config/swagger.config.js";
 
 const app = express();
 
@@ -25,6 +26,9 @@ app.use(passport.session());
 
 // Setup other middleware
 middlewareSetup(app);
+
+//Setup Swagger Docs
+swaggerSetup(app);
 
 // Routes
 app.use(router);

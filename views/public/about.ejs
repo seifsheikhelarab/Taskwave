@@ -1,41 +1,389 @@
 <%- include('../partials/header.ejs') %>
 
-<section class="py-5 bg-light">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h2 class="fw-bold">About TaskWave</h2>
-      <p class="text-muted">A project management tool designed to help teams work together more efficiently</p>
+<!-- Hero Section -->
+<section class="about-hero py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="hero-content">
+                    <h1 class="display-4 fw-bold mb-4">About TaskWave</h1>
+                    <p class="lead mb-4">Empowering teams to achieve more through intelligent project management and seamless collaboration.</p>
+                    <p class="text-muted mb-4">Founded with a vision to simplify complex project workflows, TaskWave has evolved into a comprehensive platform that helps teams of all sizes deliver exceptional results.</p>
+                    <div class="hero-stats d-flex gap-4 mb-4">
+                        <div class="stat-item">
+                            <div class="stat-number">1+</div>
+                            <div class="stat-label">Active Users</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">3+</div>
+                            <div class="stat-label">Projects Created</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">99.9%</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="hero-image text-center">
+                    <div class="floating-card">
+                        <i class="fas fa-rocket text-primary mb-3"></i>
+                        <h4>Launch Your Projects</h4>
+                        <p class="text-muted">From idea to completion, we've got you covered</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="text-center">
-          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-            <span class="h4 mb-0">1</span>
-          </div>
-          <h4 class="mt-3">Our Mission</h4>
-          <p>Our mission is to provide a simple and intuitive project management tool that helps teams work together more efficiently.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="text-center">
-          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-            <span class="h4 mb-0">2</span>
-          </div>
-          <h4 class="mt-3">Our Values</h4>
-          <p>We value simplicity, collaboration, and productivity. We believe that project management should be easy, not complicated.</p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="text-center">
-          <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-            <span class="h4 mb-0">3</span>
-          </div>
-          <h4 class="mt-3">Our Team</h4>
-          <p>Our team is dedicated to building a project management tool that meets the needs of teams like yours.</p>
-        </div>
-      </div>
-    </div>
-  </div>
 </section>
+
+<!-- Mission & Vision Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-6">
+                <div class="mission-card h-100 p-4 rounded shadow-sm">
+                    <div class="mission-icon mb-4">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h3 class="mb-3">Our Mission</h3>
+                    <p class="text-muted mb-4">To democratize project management by providing intuitive, powerful tools that enable every team to work smarter, not harder.</p>
+                    <ul class="mission-points">
+                        <li>Simplify complex workflows</li>
+                        <li>Enhance team collaboration</li>
+                        <li>Boost productivity</li>
+                        <li>Deliver measurable results</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="vision-card h-100 p-4 rounded shadow-sm">
+                    <div class="vision-icon mb-4">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3 class="mb-3">Our Vision</h3>
+                    <p class="text-muted mb-4">To become the world's most trusted project management platform, empowering millions of teams to achieve their goals with confidence.</p>
+                    <ul class="vision-points">
+                        <li>Global accessibility</li>
+                        <li>Innovation leadership</li>
+                        <li>User-centric design</li>
+                        <li>Sustainable growth</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Values Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-3">Our Core Values</h2>
+            <p class="text-muted">The principles that guide everything we do</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="value-card text-center p-4 rounded">
+                    <div class="value-icon mb-3">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5 class="mb-3">Collaboration</h5>
+                    <p class="text-muted small">We believe great things happen when people work together. Our platform fosters meaningful collaboration.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="value-card text-center p-4 rounded">
+                    <div class="value-icon mb-3">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h5 class="mb-3">Innovation</h5>
+                    <p class="text-muted small">We constantly push boundaries to deliver cutting-edge solutions that anticipate your needs.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="value-card text-center p-4 rounded">
+                    <div class="value-icon mb-3">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h5 class="mb-3">Trust</h5>
+                    <p class="text-muted small">Your data security and privacy are our top priorities. We build trust through transparency.</p>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="value-card text-center p-4 rounded">
+                    <div class="value-icon mb-3">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h5 class="mb-3">Passion</h5>
+                    <p class="text-muted small">We're passionate about helping teams succeed. Your success is our success.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Story Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="story-content">
+                    <h2 class="fw-bold mb-4">Our Story</h2>
+                    <p class="text-muted mb-4">TaskWave was born from frustration with existing project management tools that were either too complex or too simplistic. Our founder, Seif, was leading a growing team and struggling to find a solution that balanced power with simplicity.</p>
+                    <p class="text-muted mb-4">What started as a side project in 2025 has grown into a platform trusted by teams worldwide. We've learned that great project management isn't about features—it's about helping teams work better together.</p>
+                    <div class="story-milestones">
+                        <div class="milestone d-flex align-items-center mb-3">
+                            <div class="milestone-year me-3">2025</div>
+                            <div class="milestone-text">Founded with a vision to simplify project management</div>
+                        </div>
+                        <div class="milestone d-flex align-items-center mb-3">
+                            <div class="milestone-year me-3">2025</div>
+                            <div class="milestone-text">Launched beta with 1+ early adopter</div>
+                        </div>
+                        <div class="milestone d-flex align-items-center mb-3">
+                            <div class="milestone-year me-3">2025</div>
+                            <div class="milestone-text">Reached 2+ active users</div>
+                        </div>
+                        <div class="milestone d-flex align-items-center">
+                            <div class="milestone-year me-3">2025</div>
+                            <div class="milestone-text">Expanded team and launched enterprise features</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="story-image text-center">
+                    <div class="timeline-visual">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-line"></div>
+                        <div class="timeline-dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-3">Ready to Transform Your Team?</h2>
+        <p class="lead mb-4">Join thousands of teams already using TaskWave to achieve more together.</p>
+        <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+            <a href="/auth/signup" class="btn btn-light btn-lg">
+                <i class="fas fa-rocket me-2"></i>Get Started Free
+            </a>
+            <a href="/features" class="btn btn-outline-light btn-lg">
+                <i class="fas fa-info-circle me-2"></i>Learn More
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+.about-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.about-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-stats {
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.floating-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+.mission-card, .vision-card {
+    background: white;
+    border-left: 4px solid #667eea;
+    transition: transform 0.3s ease;
+}
+
+.mission-card:hover, .vision-card:hover {
+    transform: translateY(-5px);
+}
+
+.mission-icon, .vision-icon {
+    font-size: 3rem;
+    color: #667eea;
+}
+
+.mission-points, .vision-points {
+    list-style: none;
+    padding: 0;
+}
+
+.mission-points li, .vision-points li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f8f9fa;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.mission-points li:before, .vision-points li:before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #667eea;
+    font-weight: bold;
+}
+
+.value-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.value-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border-color: #667eea;
+}
+
+.value-icon {
+    font-size: 2.5rem;
+    color: #667eea;
+}
+
+.team-card {
+    background: white;
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover {
+    transform: translateY(-5px);
+}
+
+.team-avatar img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 3px solid #667eea;
+}
+
+.team-social a {
+    transition: color 0.3s ease;
+}
+
+.team-social a:hover {
+    color: #667eea !important;
+}
+
+.story-milestones {
+    margin-top: 2rem;
+}
+
+.milestone-year {
+    background: #667eea;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    min-width: 80px;
+    text-align: center;
+}
+
+.timeline-visual {
+    position: relative;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.timeline-dot {
+    width: 20px;
+    height: 20px;
+    background: #e9ecef;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+.timeline-dot.active {
+    background: #667eea;
+    box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.2);
+}
+
+.timeline-line {
+    width: 2px;
+    height: 60px;
+    background: #e9ecef;
+}
+
+@media (max-width: 768px) {
+    .hero-stats {
+        justify-content: center;
+    }
+    
+    .stat-item {
+        margin-bottom: 1rem;
+    }
+    
+    .floating-card {
+        margin-top: 2rem;
+    }
+    
+    .milestone {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .milestone-year {
+        margin-bottom: 0.5rem;
+    }
+}
+</style>
 
 <%- include('../partials/footer.ejs') %>

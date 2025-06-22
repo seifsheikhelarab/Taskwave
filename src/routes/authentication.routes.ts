@@ -405,19 +405,12 @@ router.get('/google/callback',
  *           type: string
  *     responses:
  *       302:
- *         description: User authenticated successfully and redirected to dashboard
+ *         description: User authenticated successfully and redirected to dashboard, or authentication failed and redirected to login
  *         headers:
  *           Location:
  *             schema:
  *               type: string
- *               example: "/projects"
- *       302:
- *         description: Authentication failed and redirected to login
- *         headers:
- *           Location:
- *             schema:
- *               type: string
- *               example: "/auth/login"
+ *               example: "/projects" # or "/auth/login" on failure
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */

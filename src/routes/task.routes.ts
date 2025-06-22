@@ -10,11 +10,6 @@ import {
     taskSearchSuggestionsController
 } from "../controllers/task.controller.js";
 
-/**
- * Description placeholder
- *
- * @type {*}
- */
 const router = express.Router();
 
 // User's tasks

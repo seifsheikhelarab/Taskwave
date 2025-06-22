@@ -135,8 +135,8 @@ export async function oneProjectGetController(req: Request, res: Response): Prom
             projectId = new Types.ObjectId(req.params.projectId);
         } catch (error) {
             res.status(404).render('public/error', { 
-                message: 'Project not found',
-                error: { status: 404 }
+                
+                error: { status: 404,message: 'Project not found'}
             });
             return;
         }
@@ -481,7 +481,11 @@ export async function joinProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.status(401).json({ message: 'Unauthorized' });
+            res.render("/public/error",{error:{
+                status:401,
+                message:"Unauthorized"
+            }
+        })
         }
         const { projectId, token } = req.params;
         const invitation = await Invitation.findOne({ project: projectId, token, status: 'pending', expiresAt: { $gt: new Date() } });
@@ -540,7 +544,7 @@ export async function leaveProjectGetController(req: Request, res: Response) {
             oldInput: {}
         });
     } catch (error) {
-        console.error('Error showing leave page:', error);
+        logger.error('Error showing leave page:', error);
         res.status(500).render("public/error", {
             message: "An error occurred while processing your request"
         });
@@ -552,7 +556,12 @@ export async function leaveProjectPostController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;
         if (!userId) {
-            res.status(401).json({ message: 'Unauthorized' });
+            res.render("/public/error",{
+                error:{
+                    status:401,
+                    message:"Unauthorized"
+                }
+            })
         }
 
         const projectId = new Types.ObjectId(req.params.projectId);
@@ -562,23 +571,36 @@ export async function leaveProjectPostController(req: Request, res: Response) {
         });
 
         if (!isProjectNotNull(project)) {
-            res.status(404).json({ message: "Project not found or you're not a member" });
+            res.render("/public/error",{
+                error:{
+                    status:404,
+                    message:"Project not found or you're not a member"
+                }
+            })
         }
 
         // Check if user is the owner
         if (project!.createdBy.toString() === userId) {
-            res.status(400).json({ 
-                message: "Project owner cannot leave. Please transfer ownership or delete the project."
-            });
+            res.render("/public/error",{
+                error:{
+                    status:400,
+                    message:"Project owner cannot leave. Please transfer ownership or delete the project."
+                }
+            })
         }
 
         // Remove user from project
         project!.members = project!.members.filter(m => m.user.toString() !== userId);
         await project!.save();
 
-        res.json({ message: 'Successfully left the project' });
+        res.redirect('/projects')
     } catch (error) {
         logger.error('Error leaving project:', error);
-        res.status(500).json({ message: 'An error occurred while leaving the project' });
+        res.render("/public/error",{
+                error:{
+                    status:500,
+                    message:"An error occurred while leaving the project"
+                }
+            })
     }
 }

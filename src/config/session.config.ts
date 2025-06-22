@@ -1,4 +1,4 @@
-//Configuration for Sessions
+//Configuration for Sessions and Session Stores
 
 import session from "express-session";
 import MongoStore from "connect-mongo";

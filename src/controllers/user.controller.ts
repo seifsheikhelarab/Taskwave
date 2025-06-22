@@ -5,7 +5,6 @@ import Task from "../models/task.model.js";
 import { logger } from "../config/logger.config.js";
 import path from "path";
 import fs from "fs";
-import bcrypt from "bcrypt";
 
 // Get current user's profile
 export async function currentUserGetController(req: Request, res: Response) {
@@ -88,7 +87,7 @@ export async function settingsPutController(req: Request, res: Response) {
         
         // Extract action from URL path
         const urlParts = req.url.split('/');
-        const action = urlParts[urlParts.length - 1]; // Get the last part of the URL
+        const action = urlParts[urlParts.length - 1];
         const user = await User.findById(userId);
         req.body._method = "PUT";
         switch (action) {
@@ -102,7 +101,7 @@ export async function settingsPutController(req: Request, res: Response) {
                 res.status(400).json({ message: "Invalid action" });
         }
     } catch (error) {
-        console.error('Error updating settings:', error);
+        logger.error('Error updating settings:', error);
         res.status(500).render("public/error", {
             message: "An error occurred while updating settings"
         });
@@ -132,7 +131,6 @@ async function handleProfileUpdate(req: Request, res: Response, user: any) {
 
         // Handle avatar upload
         if (req.file) {
-            // Save the avatar path relative to public, matching OAuth
             const ext = path.extname(req.file.filename) || '.jpg';
             const userId = req.session?.userId || 'user';
             user.avatar = `/avatars/${userId}-avatar${ext}`;
@@ -175,7 +173,6 @@ async function handlePasswordUpdate(req: Request, res: Response, user: any) {
             return res.status(400).json({ message: "Password must be at least 8 characters long" });
         }
 
-        // Ensure user has password field
         let userWithPassword = user;
         if (!user.password) {
             userWithPassword = await User.findById(user._id).select('+password');
@@ -184,24 +181,21 @@ async function handlePasswordUpdate(req: Request, res: Response, user: any) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Verify current password using model method
         const isMatch = await userWithPassword.correctPassword(currentPassword);
         if (!isMatch) {
             return res.status(400).json({ message: "Current password is incorrect" });
         }
 
-        // Hash and update password
         userWithPassword.password = newPassword;
         await userWithPassword.save();
 
         res.json({ message: 'Password updated successfully' });
     } catch (error) {
-        console.error('Error updating password:', error);
+        logger.error('Error updating password:', error);
         res.status(500).json({ message: 'An error occurred while updating password' });
     }
 }
 
-// Delete settings (account deletion)
 export async function settingsDeleteController(req: Request, res: Response) {
     try {
         const userId = req.session.userId;

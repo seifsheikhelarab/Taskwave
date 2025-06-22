@@ -1,4 +1,4 @@
-// mail.config.ts
+//Configuration for sending emails using Nodemailer
 
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
@@ -17,7 +17,6 @@ interface MailConfig {
     };
     from: string;
 }
-
 
 export const mailConfig: MailConfig = {
     host: process.env.SMTP_HOST!,

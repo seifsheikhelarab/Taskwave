@@ -1,5 +1,15 @@
 <%- include('../partials/header', {title: project.name + ' | TaskWave', user: user}); %>
 
+
+<% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+              <div class="alert alert-danger">
+                <ul class="mb-0">
+                  <% errors.forEach(error => { %>
+                    <li><%= error.msg %></li>
+                  <% }); %>
+                </ul>
+              </div>
+            <% } %>
 <main class="bg-light py-5">
   <div class="container">
     <!-- Project Header -->
@@ -15,7 +25,7 @@
         <p class="text-muted mb-0"><%= project.description || 'No description provided' %></p>
       </div>
       <div class="d-flex gap-2">
-        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+        <button class="btn btn-outline-primary" onclick="window.location.href='/tasks/new %>'">
           <i class="fas fa-plus me-2"></i>New Task
         </button>
         <div class="dropdown">
@@ -153,7 +163,7 @@
                 <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
                 <h5>No tasks yet</h5>
                 <p class="text-muted">Create your first task to get started</p>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                <button class="btn btn-primary" onclick="window.location.href='/tasks/new?project=<%= project._id %>'">
                   <i class="fas fa-plus me-2"></i>Create Task
                 </button>
               </div>
@@ -199,56 +209,5 @@
     </div>
   </div>
 </main>
-
-<!-- New Task Modal -->
-<div class="modal fade" id="newTaskModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Create New Task</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form action="/tasks/project/<%= project._id %>/create" method="POST" id="newTaskForm">
-          <div class="row g-3">
-            <div class="col-md-12">
-              <label for="taskTitle" class="form-label">Task Title</label>
-              <input type="text" class="form-control" id="taskTitle" name="title" required>
-            </div>
-            <div class="col-md-12">
-              <label for="taskDescription" class="form-label">Description</label>
-              <textarea class="form-control" id="taskDescription" name="description" rows="3"></textarea>
-            </div>
-            <div class="col-md-6">
-              <label for="taskDueDate" class="form-label">Due Date</label>
-              <input type="date" class="form-control" id="taskDueDate" name="dueDate">
-            </div>
-            <div class="col-md-6">
-              <label for="taskPriority" class="form-label">Priority</label>
-              <select class="form-select" id="taskPriority" name="priority">
-                <option value="low">Low</option>
-                <option value="medium" selected>Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-            <div class="col-md-12">
-              <label for="taskAssignee" class="form-label">Assign To</label>
-              <select class="form-select" id="taskAssignee" name="assignees" multiple>
-                <% project.members.forEach(member => { %>
-                  <option value="<%= member.user._id %>"><%= member.user.firstName %> <%= member.user.lastName %></option>
-                <% }); %>
-              </select>
-              <div class="form-text">Hold Ctrl/Cmd to select multiple assignees</div>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" form="newTaskForm" class="btn btn-primary">Create Task</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <%- include('../partials/footer'); %>

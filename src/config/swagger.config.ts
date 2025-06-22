@@ -1,3 +1,5 @@
+//Configuration for Swagger to generate API documentation
+
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -341,7 +343,8 @@ export default function swaggerSetup(app: Application){
                 }
             }
         },
-        apis: ['./src/**/*.ts','./dist/**/*.js'],
+        apis: ['./src/**/*.ts'],
+        //,'./dist/**/*.js' too
 };
 
     const specs = swaggerJSDoc(options)

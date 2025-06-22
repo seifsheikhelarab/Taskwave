@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Task from "../models/task.model.js";
 import Project from "../models/project.model.js";
 import User from "../models/user.model.js";
+import { ObjectId } from "mongoose";
 import { Types } from "mongoose";
 import { emailService } from "../services/email.service.js";
 import { logger } from "../config/logger.config.js";
@@ -170,8 +171,9 @@ export async function newTaskPostController(req: Request, res: Response): Promis
             res.status(401).redirect("/error");
             return;
         }
-        const userIdObj = new Types.ObjectId(req.session.userId);
-        const projectId = new Types.ObjectId(req.body.project);
+        const userIdObj = new Types.ObjectId(userId.toString());
+        const projectId = new Types.ObjectId(String(req.body.project));
+        logger.info(projectId);
 
         const { title, description, status, priority, dueDate, assignees } = req.body;
 
@@ -219,7 +221,7 @@ export async function newTaskPostController(req: Request, res: Response): Promis
         // Redirect back to project page
         res.redirect(`/projects/${projectId}`);
     } catch (error) {
-        logger.error('Error creating task:', error);
+        console.error('Error creating task:', error);
         res.status(500).json({ message: 'An error occurred while creating the task' });
     }
 }
@@ -375,7 +377,7 @@ export async function oneTaskDeleteController(req: Request, res: Response): Prom
 
         await task!.deleteOne();
 
-        res.json({ message: 'Task deleted successfully' });
+        res.redirect('/tasks');
     } catch (error) {
         logger.error('Error deleting task:', error);
         res.status(500).json({ message: 'An error occurred while deleting the task' });
@@ -575,7 +577,7 @@ export async function taskCreatePostController(req: Request, res: Response): Pro
 
         res.redirect('/tasks');
     } catch (error) {
-        logger.error('Error creating task:', error);
+        console.error('Error creating task:', error);
         res.status(500).render("public/error", {
             message: "An error occurred while creating task"
         });

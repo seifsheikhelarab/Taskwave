@@ -33,8 +33,8 @@ swaggerSetup(app);
 // Routes
 app.use(router);
 
-// Start server
-const port = process.env.PORT || 3000;
-app.listen(port, () => logger.info(`App Started on http://localhost:${port}`));
+// // Start server
+// const port = process.env.PORT || 3000;
+// app.listen(port, () => logger.info(`App Started on http://localhost:${port}`));
 
 export default app;

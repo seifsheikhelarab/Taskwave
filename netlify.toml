@@ -1,0 +1,14 @@
+[build]
+  functions = "dist/netlify"
+  publish = "public"
+
+[functions]
+  external_node_modules = ["express","ejs","serverless-http","passport", "..."]
+  node_bundler = "esbuild"
+  included_files = ["dist/views/**", "dist/public/**"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true

@@ -25,7 +25,7 @@ Ideal for practicing and showcasing full-stack backend development skills using 
 ## 🔧 Tech Stack
 
 ### Backend
-- **Node.js** + **Express.js**
+- **Node.js** + **Express.js** + **Typescript**
 - **MongoDB Atlas** + **Mongoose**
 
 ### Authentication & Security

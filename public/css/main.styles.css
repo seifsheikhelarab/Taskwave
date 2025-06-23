@@ -138,3 +138,23 @@
     background-color: rgba(110, 142, 251, 0.1);
     border-radius: 6px;
 }
+
+    /* .error-page {
+        padding: 3rem 0;
+    }
+    .error-page h1 {
+        font-size: 8rem;
+        line-height: 1;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, var(--bs-primary), #6c5ce7);
+        -webkit-background-clip: text;
+        background-clip: inherit;
+        -webkit-text-fill-color: transparent;
+    }
+    .error-page h2 {
+        font-size: 2rem;
+        color: #2d3436;
+    }
+    .error-page .lead {
+        font-size: 1.2rem;
+    } */

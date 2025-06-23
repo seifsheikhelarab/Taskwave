@@ -1,143 +1,203 @@
 
-# TaskWave - Work in Progress
+<p align="center">
+  <img src="/public/img/logo.jpeg" alt="TaskWave Logo" width="200"/>
+</p>
 
-TaskWave is a team-based project and task management system. It helps teams manage projects, assign tasks, track progress, and collaborate effectively.
+**TaskWave** is a full-stack, team-based project and task management system. It helps teams manage projects, assign tasks, track progress, and collaborate effectively — all with a focus on best practices, clean structure, and real-world simulation.
 
-## Project Overview
+---
 
-TaskWave is built to simulate a real-world team collaboration platform. It includes authentication, role management, task boards, notifications, and more. Ideal for practicing and showcasing full-stack backend skills.
+## 📌 Project Overview
+
+TaskWave is built to simulate a professional collaboration platform. It includes:
+
+- Secure user authentication (including Google OAuth)
+- Role-based access control (Admin, Member, Guest)
+- Task boards and project tracking
+- User invites and notifications
+- RESTful APIs and Swagger docs
+- Email-based password reset and notification system
+
+Ideal for practicing and showcasing full-stack backend development skills using modern technologies.
+
+---
 
 ## 🔧 Tech Stack
 
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB Atlas + Mongoose
-- **Authentication**: Passport.js (Local + OAuth2.0 - Google/GitHub)
-- **Templating**: EJS (for server-rendered views)
-- **Email Service**: NodeMailer (SMTP)
-- **Session Management**: express-session + connect-mongo
-- **Validation**: express-validator
-- **Security**: bcrypt, express-rate-limit, dotenv
-- **Testing** *(Planned)*: Jest + Supertest
-- **API Documentation**: Postman / Swagger *(Planned)*
+### Backend
+- **Node.js** + **Express.js**
+- **MongoDB Atlas** + **Mongoose**
+
+### Authentication & Security
+- **Passport.js** – Google OAuth2.0
+- **bcrypt** – Password hashing
+- **express-session** + **connect-mongo** – Session management
+- **express-rate-limit** + **rate-limit-mongo** – Brute-force protection
+- **dotenv** – Environment variable management
+- **express-validator** – Server-side validation
+- **method-override** – Support for PUT/PATCH in forms
+
+### Views & User Interface
+- **EJS** – Templating engine
+- **axios** – Fetching Google profile pictures
+- **HTML+CSS+Bootstrap** - Styling the interface
+
+### Utilities
+- **multer** – Profile picture uploads
+- **nodemailer** – Email notifications and password resets
+- **pino** + **pino-pretty** – Logging
+
+### API Docs & Testing
+- **swagger-jsdoc** + **swagger-ui-express** – API documentation
+- *(Planned)* **Jest** + **Supertest** – Unit/integration testing
+
+---
 
 ## ✨ Features
 
 ### 🧑‍💼 Authentication & Authorization
-
-- Signup/Login with email and password
-- OAuth2.0 with Google/GitHub
-- Session-based authentication
-- Role-based access: Admin, Member, Guest
-- Protected routes based on roles
+- Email/password login with hashed storage
+- Google OAuth 2.0
+- Password reset via email
+- Role-based access (Admin, Member, Guest)
+- Session-based login with persistent cookies
 
 ### 🗂️ Project & Task Management
+- Create and manage multiple projects
+- Add tasks with priority levels
+- Assign tasks to team members
+- Invite other users to collaborate
 
-- Create or join projects
-- Task boards with columns: To Do, In Progress, Done
-- Assign members to tasks
-- File attachments with Multer *(Coming Soon)*
+### 📤 Profile & Media
+- Upload profile pictures via **Multer**
+- Fetch Google profile photos using **Axios**
+- Edit personal profile info
 
 ### 🔐 Security & Best Practices
+- Environment configs via `.env`
+- Input validation and sanitation
+- Session management and protection
+- Rate limiting to prevent abuse
 
-- Environment variables with `.env`
-- Server-side input validation
-- Rate limiting to protect against brute-force attacks
-- Password hashing with bcrypt
+### 📧 Notifications
+- Project invites via email
+- Task updates via **NodeMailer**
 
-### 🔁 Sessions & State
+### 📘 API & Docs
+- RESTful API with meaningful HTTP status codes
+- JSON responses for all API routes
+- Swagger docs hosted at `/api-docs`
+- Plans for public API exposure
 
-- Session management via MongoDB store
-- Cookie-based login persistence
-- Clear comparison between sessions vs tokens
-
-### 📧 Notification System
-
-- Email invites to projects
-- Notifications for task updates via NodeMailer
-
-### 📄 API
-
-- RESTful routing and responses
-- JSON responses for API endpoints
-- Proper HTTP status codes
-- Plans to expose public APIs for integration
-
-### 📘 Documentation & Testing
-
-- API documentation with Postman or Swagger *(Planned)*
-- Unit and integration tests with Jest & Supertest *(Planned)*
+---
 
 ## 🛠️ Setup Instructions
 
-1. **Clone the Repository**
+### 1. Clone the Repository
 
-   ```bash
-   git clone https://github.com/seifsheikhelarab/Taskwave.git
-   cd Taskwave
+```bash
+git clone https://github.com/seifsheikhelarab/Taskwave.git
+cd Taskwave
+````
 
-2. **Install Dependencies**
+### 2. Install Dependencies
 
-   ```bash
-   npm install
-   ```
-
-3. **Environment Variables**
-   Create a `.env` file in the root directory:
-
-   ```env
-   PORT=3000
-   MONGO_URI=your_mongodb_connection_string
-   SESSION_SECRET=your_session_secret
-   GMAIL_USER=your_email@gmail.com
-   GMAIL_PASS=your_app_password
-   GOOGLE_CLIENT_ID=your_google_client_id
-   GOOGLE_CLIENT_SECRET=your_google_client_secret
-   ```
-
-4. **Run the App**
-
-   ```bash
-   npm run dev
-   ```
-
-5. **Visit**
-
-   Open `http://localhost:3000` in your browser.
-
-## 📦 Folder Structure
-
-```file
-src/
-├── controllers/
-├── models/
-├── routes/
-├── views/
-├── middleware/
-├── utils/
-├── public/
-├── tests/               # Coming soon
-├── config/
-├── .env.example
-├── app.js
-└── README.md
+```bash
+npm install
 ```
 
-## 📌 Roadmap
+### 3. Configure Environment Variables
 
-- Attachments via Multer
-- Unit/Integration Testing
-- Swagger API Docs
-- Frontend SPA or Mobile App Integration
-- Deploy to Render or Railway
+Create a `.env` file in the root directory with:
+
+```
+# Server Configuration
+PORT = 3000
+NODE_ENV = development
+
+#Session Secret and MongoURI
+SESSION_SECRET = secret
+MONGO_URI = mongodb://localhost:27017/taskwave
+
+# Email Configuration
+SMTP_HOST = host.com
+SMTP_PORT = 587
+SMTP_SECURE = false
+SMTP_USER = user@host.com
+SMTP_PASS = password
+SMTP_FROM = user@host.com
+APP_URL = http://localhost:3000
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID = googleid
+GOOGLE_CLIENT_SECRET = googlesecret
+GOOGLE_REDIRECT_URI = http://localhost:3000/auth/google/callback
+
+```
+
+### 4. Run the App
+
+```bash
+npm run dev
+```
+
+### 5. Open in Browser
+
+Visit [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 📁 Folder Structure
+
+```
+public/
+├── avatars/
+├── css/
+├── img/
+└── js/
+
+views/
+
+src/
+├── config/
+├── controllers/
+├── middleware/
+├── models/
+├── routes/
+├── services/
+├── utils/
+├── .env.example
+└── app.ts
+
+package.json
+README.md
+tsconfig.json
+```
+
+---
+
+## 🔮 Roadmap
+
+* [ ] Unit & integration testing with Jest + Supertest
+* [ ] Deployment to Render or Railway
+* [ ] Public API with token-based access
+* [ ] Dark/light theme toggle
+
+---
 
 ## 🧑‍💻 Contributing
 
-Contributions are welcome! Feel free to open issues or submit PRs to enhance functionality, fix bugs, or improve documentation.
+Contributions are welcome!
+Feel free to fork, submit issues, or create PRs to improve the project.
+
+---
 
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
 
+---
+
 ## 💬 Acknowledgments
 
-Thanks to the open-source community and the amazing tools powering this project.
+Big thanks to the open-source community and the maintainers of the amazing tools powering this project.

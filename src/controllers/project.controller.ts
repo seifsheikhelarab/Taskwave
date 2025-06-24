@@ -414,7 +414,7 @@ export async function inviteProjectPostController(req: Request, res: Response) {
         });
 
         // Send invitation email
-        const joinLink = `${process.env.BASE_URL}/projects/${project._id}/join/${token}`;
+        const joinLink = `${process.env.APP_URL}/projects/${project._id}/join/${token}`;
         const inviter = await User.findById(userId);
         if (inviter) {
             await emailService.sendProjectInvitationEmail(email, project, inviter, joinLink);

@@ -23,7 +23,7 @@ export function configurePassport() {
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        callbackURL: `${process.env.BASE_URL}/auth/google/callback`,
+        callbackURL: process.env.GOOGLE_REDIRECT_URI!,
         scope: ['profile', 'email']
     }, async (accessToken: string, refreshToken: string, profile: any, done: (error: Error | null, user?: any) => void) => {
         try {
